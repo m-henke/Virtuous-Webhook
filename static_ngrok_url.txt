@@ -1,0 +1,4 @@
+just run this then start the server and if you visit that link you wil be at the site
+ngrok http --url=enhanced-monkey-quietly.ngrok-free.app 80
+
+https://dbdiagram.io/d/Virtuous-Local-DB-Copy-67b7892e263d6cf9a0e950e0

@@ -1,0 +1,16 @@
+{
+  "name": "virtuous-webhook",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Michael Henke",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
