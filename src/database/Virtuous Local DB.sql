@@ -45,10 +45,10 @@ CREATE TABLE gifts (
   GiftDate DATE NOT NULL,
   ContactID INT NOT NULL,
   IndividualID INT NOT NULL,
-  SegmentID INT NOT NULL,
+  SegmentCode INT NOT NULL,
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID) ON DELETE CASCADE,
-  FOREIGN KEY (SegmentID) REFERENCES segments (SegmentID) ON DELETE CASCADE
+  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode) ON DELETE CASCADE
 );
 
 CREATE TABLE tags (
