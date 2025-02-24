@@ -10,3 +10,7 @@ Go to Virtuous -> Marketing -> Campaigns -> Actions -> Download -> Select (ID, S
 Download this query: https://app.virtuoussoftware.com/Generosity/Query/Editor/5507
 
 move downloaded files to src/database/virtuous_exports
+
+Campaign ID == 0 means that it is an archived campaign
+
+When creating the database in the fix segment function if there is a segment that doesn't match to a gift in the last 5 years it is skipped and not added to the local database 
