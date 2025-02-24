@@ -46,22 +46,39 @@ if __name__ == "__main__":
     # data = response.json()
     # print()
 
-    url = "https://api.virtuoussoftware.com/api/Campaign/Query?skip=0&take=999"
+    # url = "https://api.virtuoussoftware.com/api/Campaign/Query?skip=0&take=999"
+    # data = {
+    #     "groups": [
+    #         {
+    #             "conditions": [
+    #                 {
+    #                     "parameter": "Campaign Id",
+    #                     "operator": "GreaterThanOrEqual",
+    #                     "value": "1"
+    #                 }
+    #             ]
+    #         }
+    #     ]
+    # }
+    # response = requests.post(url, data=json.dumps(data), headers={'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'})
+    # data = response.json()
+    # print()
+
     data = {
         "groups": [
             {
                 "conditions": [
                     {
-                        "parameter": "Campaign Id",
-                        "operator": "GreaterThanOrEqual",
-                        "value": "1"
+                        "parameter": "type",
+                        "operator": "Is",
+                        "value": "Call"
                     }
                 ]
             }
         ]
     }
+    url = "https://api.virtuoussoftware.com/api/Task/Query?skip=0&take=5"
     response = requests.post(url, data=json.dumps(data), headers={'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'})
-    data = response.json()
     print()
 
     # url = "https://api.virtuoussoftware.com/api/Campaign/QueryOptions"
