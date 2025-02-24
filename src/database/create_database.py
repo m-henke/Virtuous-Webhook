@@ -1,7 +1,7 @@
 import mysql.connector
 import requests, os
 
-TAG_ENDPOINT = "https://api.virtuoussoftware.com/api/Tag?skip=0"
+TAG_ENDPOINT = "https://api.virtuoussoftware.com/api/Tag?skip=0&take=1000"
 HEADERS = {
     'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'
 }
@@ -15,7 +15,7 @@ def create_tables():
     # read table creation commands
     try:
         with open("Virtuous Local DB.sql", 'r') as f:
-            table_commands = f.read()
+            table_commands = [command.strip() for command in f.read().split(';')]
     except FileNotFoundError:
         with open("src/database/Virtuous Local DB.sql", 'r') as f:
             table_commands = [command.strip() for command in f.read().split(';')]
@@ -49,7 +49,7 @@ def insert_tags():
 
 if __name__ == "__main__":
     conn = mysql.connector.connect(
-        host="100.93.36.64",
+        host="localhost",  # "100.93.36.64",
         user="mike",
         password="Bigfoot22!",
         database="VirtuousDB"
@@ -59,5 +59,6 @@ if __name__ == "__main__":
     create_tables()
     insert_tags()
 
+    conn.commit()
     cursor.close()
     conn.close()
