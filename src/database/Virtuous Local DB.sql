@@ -44,7 +44,7 @@ CREATE TABLE gifts (
   GiftType VARCHAR(50) NOT NULL,
   GiftDate DATE NOT NULL,
   ContactID INT NOT NULL,
-  IndividualID INT NOT NULL,
+  IndividualID INT,
   SegmentCode INT NOT NULL,
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID) ON DELETE CASCADE,
