@@ -8,6 +8,8 @@ Go to Virtuous -> Marketing -> Campaigns -> Segments -> Actions -> Download -> S
 Go to Virtuous -> Marketing -> Campaigns -> Actions -> Download -> Select (ID, SEGMENT NAME) -> Download
     Make sure to click the fields in that order so they are in that order in the downloaded csv file
 Download this query: https://app.virtuoussoftware.com/Generosity/Query/Editor/5507
+Download this query: https://app.virtuoussoftware.com/Generosity/Query/Editor/5510
+Download this query: https://app.virtuoussoftware.com/Generosity/Query/Editor/5509
 
 move downloaded files to src/database/virtuous_exports
 
