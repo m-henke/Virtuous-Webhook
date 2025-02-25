@@ -64,21 +64,25 @@ if __name__ == "__main__":
     # data = response.json()
     # print()
 
-    data = {
-        "groups": [
-            {
-                "conditions": [
-                    {
-                        "parameter": "type",
-                        "operator": "Is",
-                        "value": "Call"
-                    }
-                ]
-            }
-        ]
-    }
-    url = "https://api.virtuoussoftware.com/api/Task/Query?skip=0&take=5"
-    response = requests.post(url, data=json.dumps(data), headers={'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'})
+    # data = {
+    #     "groups": [
+    #         {
+    #             "conditions": [
+    #                 {
+    #                     "parameter": "type",
+    #                     "operator": "Is",
+    #                     "value": "Call"
+    #                 }
+    #             ]
+    #         }
+    #     ]
+    # }
+    # url = "https://api.virtuoussoftware.com/api/Task/Query?skip=0&take=5"
+    # response = requests.post(url, data=json.dumps(data), headers={'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'})
+    # print()
+
+    url = "https://api.virtuoussoftware.com/api/OrganizationGroup?take=1000"
+    response = requests.get(url, headers={'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'}).json()
     print()
 
     # url = "https://api.virtuoussoftware.com/api/Campaign/QueryOptions"
