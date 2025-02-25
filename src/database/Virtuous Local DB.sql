@@ -2,7 +2,6 @@ CREATE TABLE contacts (
   ContactID INT PRIMARY KEY NOT NULL,
   ContactName VARCHAR(255) NOT NULL,
   ContactType VARCHAR(25) NOT NULL,
-  GiftAskAmount DECIMAL(10, 2) NOT NULL,
   LastGiftAmount DECIMAL(10, 2),
   LastGiftDate DATE
 );
@@ -12,7 +11,7 @@ CREATE TABLE individuals (
   ContactID INT NOT NULL,
   FirstName VARCHAR(25) NOT NULL,
   LastName VARCHAR(25) NOT NULL,
-  PhoneNumber VARCHAR(20),
+  PhoneNumber VARCHAR(10),
   Email VARCHAR(255),
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE
 );
@@ -20,14 +19,14 @@ CREATE TABLE individuals (
 CREATE TABLE communications (
   CommunicationID INT PRIMARY KEY NOT NULL,
   CommunicationName VARCHAR(100) NOT NULL,
-  ChannelType VARCHAR(100) NOT NULL
+  ChannelType VARCHAR(100) NOT NULL,
+  CampaignID INT NOT NULL,
+  FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID) ON DELETE CASCADE
 );
 
 CREATE TABLE campaigns (
   CampaignID INT PRIMARY KEY NOT NULL,
-  CampaignName VARCHAR(100) NOT NULL,
-  CommunicationID INT NOT NULL,
-  FOREIGN KEY (CommunicationID) REFERENCES communications (CommunicationID) ON DELETE CASCADE
+  CampaignName VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE segments (
@@ -45,7 +44,7 @@ CREATE TABLE gifts (
   GiftDate DATE NOT NULL,
   ContactID INT NOT NULL,
   IndividualID INT,
-  SegmentCode INT NOT NULL,
+  SegmentCode VARCHAR(50) NOT NULL,
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID) ON DELETE CASCADE,
   FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode) ON DELETE CASCADE
@@ -63,3 +62,16 @@ CREATE TABLE contact_tags (
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
   FOREIGN KEY (TagID) REFERENCES tags (TagID) ON DELETE CASCADE
 );
+
+CREATE TABLE org_groups (
+  OrgGroupID INT PRIMARY KEY NOT NULL,
+  OrgGroupName VARCHAR(100) NOT NULL
+)
+
+CREATE TABLE contact_org_groups (
+  ContactID INT NOT NULL,
+  OrgGroupID INT NOT NULL,
+  PRIMARY KEY (ContactID, OrgGroupID),
+  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
+  FOREIGN KEY (OrgGroupID) REFERENCES org_groups (OrgGroupID) ON DELETE CASCADE
+)
