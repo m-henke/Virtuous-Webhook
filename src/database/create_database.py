@@ -5,6 +5,7 @@ from datetime import datetime
 import json
 
 TAG_ENDPOINT = "https://api.virtuoussoftware.com/api/Tag?skip=0&take=1000"
+ORG_GROUP_ENDPOINT = "https://api.virtuoussoftware.com/api/OrganizationGroup?take=1000"
 HEADERS = {
     'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'
 }
@@ -51,46 +52,72 @@ def insert_tags():
     cursor.execute("SELECT * FROM tags LIMIT 3;")
     print("Tags:", cursor.fetchall())
 
-# Reads the Virtuous exports and returns the data
+# Download and insert org groups from Virtuous API
+def insert_org_groups():
+    response = requests.get(ORG_GROUP_ENDPOINT, headers=HEADERS).json()['list']
+    org_groups = [[line['id'], line['name']] for line in response]
+    query = """
+        INSERT INTO org_groups(
+            OrgGroupID,
+            OrgGroupName
+        )
+        VALUES(%s, %s);
+    """
+    cursor.executemany(query, org_groups)
+    cursor.execute("SELECT * FROM org_groups LIMIT 3;")
+    print("Org Groups:", cursor.fetchall())
+
+# Reads and formats the Virtuous exports and returns the data
 def read_virtuous_exports():
+    # Helper function for read_virtuous_exports 
+    def get_csv_file(filename):
+        try:
+            with open(f"virtuous_exports/{filename}", 'r', encoding='utf-8') as f:
+                f.readline()
+                return_data = f.readlines()
+        except FileNotFoundError:
+            with open(f"src/database/virtuous_exports/{filename}", 'r', encoding='utf-8') as f:
+                f.readline()
+                return_data = f.readlines()
+        return_data = [line.strip().split(',') for line in return_data]
+        return_data = [[col.strip('"') for col in row] for row in return_data]
+        return return_data
+
+    # Helper function for read_virtuous_exports
+    def format_phone_number(individual):
+        phone_number = individual[4]
+        # Too short to be a full number
+        if len(phone_number) < 10:
+            return None
+        # Remove country code
+        if phone_number[:2] == "+1":
+            phone_number = phone_number[2:]
+        # Remove unnescary characters
+        replace_list = ["(", ")", "-", " ", ".", "+", "\n"]
+        for character in replace_list:
+            phone_number = phone_number.replace(character, "")
+        # Remove trailing extension
+        if len(phone_number) > 10 and phone_number[10].lower() == "e":
+            phone_number = phone_number[:10]
+        # All formatting is done and it's not the rigth length
+        if len(phone_number) != 10:
+            return None
+        # Contains non digit characters
+        if not phone_number.isdigit():
+            return None
+        return phone_number
+    
     # Import segment data
-    try:
-        with open("virtuous_exports/Segment Export.csv", 'r') as f:
-            f.readline()
-            segment_data = f.readlines()
-    except FileNotFoundError:
-        with open("src/database/virtuous_exports/Segment Export.csv", 'r') as f:
-            f.readline()
-            segment_data = f.readlines()
-    segment_data = [line.strip().split(',') for line in segment_data]
-    segment_data = [[col.strip('"') for col in row] for row in segment_data]
+    segment_data = get_csv_file("Segment Export.csv")
     segment_data = [[int(line[0])] + line[1:] for line in segment_data]
 
     # Import campaign data
-    try:
-        with open("virtuous_exports/Campaign Export.csv", 'r') as f:
-            f.readline()
-            campaign_data = f.readlines()
-    except FileNotFoundError:
-        with open("src/database/virtuous_exports/Campaign Export.csv", 'r') as f:
-            f.readline()
-            campaign_data = f.readlines()
-    campaign_data = [line.strip().split(',') for line in campaign_data]
-    campaign_data = [[col.strip('"') for col in row] for row in campaign_data]
+    campaign_data = get_csv_file("Campaign Export.csv")
     campaign_data = [[int(line[0])] + line[1:] for line in campaign_data]
     campaign_data.insert(0, [0, 'Archived Campaign'])
 
     # Import gift data
-    try:
-        with open("virtuous_exports/All Gifts.csv", 'r') as f:
-            f.readline()
-            gift_data = f.readlines()
-    except FileNotFoundError:
-        with open("src/database/virtuous_exports/All Gifts.csv", 'r') as f:
-            f.readline()
-            gift_data = f.readlines()
-    gift_data = [line.strip().split(',') for line in gift_data]
-    gift_data = [[col.strip('"') for col in row] for row in gift_data]
+    gift_data = get_csv_file("All Gifts.csv")
     gift_data = [
         [int(line[0])] + 
         [Decimal(line[1])] + 
@@ -100,7 +127,16 @@ def read_virtuous_exports():
         [None if line[5] == '' else int(line[5])] +
         line[6:] for line in gift_data
         ]
-    return segment_data, campaign_data, gift_data
+    
+    # Import individual data
+    individual_data = get_csv_file("All Individuals.csv")
+    individual_data = [[int(line[0])] + [int(line[1])] + line[2:] for line in individual_data]
+    for individual in individual_data:
+        individual[4] = format_phone_number(individual)
+        if individual[5] == "":
+            individual[5] = None
+    
+    return segment_data, campaign_data, gift_data, individual_data
 
 # Adds the campaign ID to each segment and removes ones not used since 01/01/2020
 def fix_segments(segment_data, campaign_data, gift_data):
@@ -127,6 +163,11 @@ def fix_segments(segment_data, campaign_data, gift_data):
             continue
         new_segment_data.append(segment + [campaign_id])
 
+    # Undo changes to gift data
+    for line in gift_data:
+        for i in range(3):
+            line.pop()
+
     return new_segment_data
 
 # Gets the communications for each campaign (see comments for more info)
@@ -140,34 +181,39 @@ def get_communications(campaign_data):
     
     # Once used just load from the file to not run up the rate limit
     # first = True
+    # communication_data = []
     # for campaign in campaign_data:
     #     print(f"{campaign[0]}", end="\r")
     #     if first:
     #         first = False
-    #         campaign.append([])
     #         continue
     #     url = f"https://api.virtuoussoftware.com/api/Communication/ByCampaign/{campaign[0]}?skip=0&take=100"
     #     response = requests.get(url, headers=HEADERS).json()
     #     total = response['total']
-    #     campaign.append(response['list'])
+    #     communication_data.append(response['list'])
     #     if total <= 100:
     #         continue
     #     cur_total = 100
     #     while cur_total < total:
     #         url = f"https://api.virtuoussoftware.com/api/Communication/ByCampaign/{campaign[0]}?skip={cur_total}&take=100"
     #         response = requests.get(url, headers=HEADERS).json()
-    #         campaign[2] += response['list']
+    #         communication_data[len(communication_data) - 1] += response['list']
     #         cur_total += 100
 
-    # with open("temp_communications2.json", 'w') as f:
-    #     json.dump(campaign_data, f)
+    # with open("temp_communications3.json", 'w') as f:
+    #     json.dump(communication_data, f)
 
-    # with open("temp_communications.json", 'w') as f:
-    #     json.dump(campaign_data, f)
-
-    with open("temp_communications2.json", "r") as file:
+    with open("temp_communications3.json", "r") as file:
         loaded_data = json.load(file)
     return loaded_data
+
+# Removes unnecessary columns from the data
+def fix_communications(communication_data):
+    new_communication_data = []
+    for communication in communication_data:
+        for comm in communication:
+            new_communication_data.append([comm['communicationId'], comm['name'], comm['channelType'], comm['campaignId']])
+    return new_communication_data
     
 
 if __name__ == "__main__":
@@ -181,10 +227,16 @@ if __name__ == "__main__":
 
     # create_tables()
     # insert_tags()
+    # insert_org_groups()
     
-    segment_data, campaign_data, gift_data = read_virtuous_exports()
+    segment_data, campaign_data, gift_data, individual_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
     communication_data = get_communications(campaign_data)
+    communication_data = fix_communications(communication_data)
+    print()
+    # segment & communication & campaign & individual data is done
+    # gift data is done except for removing the last 2 columns
+
 
     # conn.commit()
     # cursor.close()
