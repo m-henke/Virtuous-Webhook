@@ -9,19 +9,11 @@ CREATE TABLE contacts (
 CREATE TABLE individuals (
   IndividualID INT PRIMARY KEY NOT NULL,
   ContactID INT NOT NULL,
-  FirstName VARCHAR(25) NOT NULL,
-  LastName VARCHAR(25) NOT NULL,
+  FirstName VARCHAR(100) NOT NULL,
+  LastName VARCHAR(100) NOT NULL,
   PhoneNumber VARCHAR(10),
   Email VARCHAR(255),
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE
-);
-
-CREATE TABLE communications (
-  CommunicationID INT PRIMARY KEY NOT NULL,
-  CommunicationName VARCHAR(100) NOT NULL,
-  ChannelType VARCHAR(100) NOT NULL,
-  CampaignID INT NOT NULL,
-  FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID) ON DELETE CASCADE
 );
 
 CREATE TABLE campaigns (
@@ -29,13 +21,23 @@ CREATE TABLE campaigns (
   CampaignName VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE communications (
+  CommunicationID INT PRIMARY KEY NOT NULL,
+  CommunicationName VARCHAR(100) NOT NULL,
+  ChannelType VARCHAR(100) NOT NULL,
+  CampaignID INT NOT NULL,
+  FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID)
+);
+
 CREATE TABLE segments (
   SegmentID INT PRIMARY KEY NOT NULL,
   SegmentCode VARCHAR(50) NOT NULL,
   SegmentName VARCHAR(100) NOT NULL,
   CampaignID INT NOT NULL,
-  FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID) ON DELETE CASCADE
+  FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID)
 );
+
+CREATE INDEX idx_segment_code ON segments (SegmentCode);
 
 CREATE TABLE gifts (
   GiftID INT PRIMARY KEY NOT NULL,
@@ -45,9 +47,9 @@ CREATE TABLE gifts (
   ContactID INT NOT NULL,
   IndividualID INT,
   SegmentCode VARCHAR(50) NOT NULL,
-  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
-  FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID) ON DELETE CASCADE,
-  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode) ON DELETE CASCADE
+  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
+  FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID),
+  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
 );
 
 CREATE TABLE tags (
@@ -59,19 +61,19 @@ CREATE TABLE contact_tags (
   ContactID INT NOT NULL,
   TagID INT NOT NULL,
   PRIMARY KEY (ContactID, TagID),
-  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
-  FOREIGN KEY (TagID) REFERENCES tags (TagID) ON DELETE CASCADE
+  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
+  FOREIGN KEY (TagID) REFERENCES tags (TagID)
 );
 
 CREATE TABLE org_groups (
   OrgGroupID INT PRIMARY KEY NOT NULL,
   OrgGroupName VARCHAR(100) NOT NULL
-)
+);
 
 CREATE TABLE contact_org_groups (
   ContactID INT NOT NULL,
   OrgGroupID INT NOT NULL,
   PRIMARY KEY (ContactID, OrgGroupID),
-  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE,
-  FOREIGN KEY (OrgGroupID) REFERENCES org_groups (OrgGroupID) ON DELETE CASCADE
-)
+  FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
+  FOREIGN KEY (OrgGroupID) REFERENCES org_groups (OrgGroupID)
+);
