@@ -16,3 +16,12 @@ move downloaded files to src/database/virtuous_exports
 Campaign ID == 0 means that it is an archived campaign
 
 When creating the database in the fix segment function if there is a segment that doesn't match to a gift in the last 5 years it is skipped and not added to the local database 
+
+It will take atleast an hour to run the create_database script
+The get communication function contains commented code
+    some of it is there for testing purposes as running the function take about 600 api calls
+    So if you need to test it uncomment the code that saves it to a json file 
+    run it and save it
+    then comment everything except for the code that reads the json file and returns it
+    It also contains code that can do all of this in one query however Virtuous API is broken so it won't work
+        if it works in the future it might be worth updating this
