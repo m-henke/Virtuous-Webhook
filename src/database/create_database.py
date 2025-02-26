@@ -107,6 +107,10 @@ def read_virtuous_exports():
             return None
         return phone_number
     
+    # Helper function for read_virtuous_exports
+    def format_date(date):
+        return datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
+
     # Import segment data
     segment_data = get_csv_file("Segment Export.csv")
     segment_data = [[int(line[0])] + line[1:] for line in segment_data]
@@ -122,11 +126,10 @@ def read_virtuous_exports():
         [int(line[0])] + 
         [Decimal(line[1])] + 
         [line[2]] +
-        [datetime.strptime(line[3], "%m/%d/%Y").strftime('%Y-%m-%d')] + 
+        [format_date(line[3])] + 
         [int(line[4])] + 
         [None if line[5] == '' else int(line[5])] +
-        line[6:] for line in gift_data
-        ]
+        line[6:] for line in gift_data]
     
     # Import individual data
     individual_data = get_csv_file("All Individuals.csv")
@@ -135,8 +138,19 @@ def read_virtuous_exports():
         individual[4] = format_phone_number(individual)
         if individual[5] == "":
             individual[5] = None
+
+    # Import contact data
+    contact_data = get_csv_file("All Contacts.csv")
+    contact_data = [
+        [int(line[0])] + 
+        [line[1]] +
+        [line[2]] +
+        [Decimal(line[3])] +  # here is the error
+        [format_date(line[4])] +
+        line[5:] for line in contact_data]
+    print()
     
-    return segment_data, campaign_data, gift_data, individual_data
+    return segment_data, campaign_data, gift_data, individual_data, contact_data
 
 # Adds the campaign ID to each segment and removes ones not used since 01/01/2020
 def fix_segments(segment_data, campaign_data, gift_data):
@@ -229,13 +243,13 @@ if __name__ == "__main__":
     # insert_tags()
     # insert_org_groups()
     
-    segment_data, campaign_data, gift_data, individual_data = read_virtuous_exports()
+    segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
     print()
-    # segment & communication & campaign & individual data is done
-    # gift data is done except for removing the last 2 columns
+    # segment & communication & campaign & gift & individual data is done
+
 
 
     # conn.commit()
