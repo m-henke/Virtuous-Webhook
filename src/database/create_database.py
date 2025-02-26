@@ -39,6 +39,7 @@ def create_tables():
 
 # Download and insert tags from Virtuous API
 def insert_tags():
+    print("Pulling tags from Virtuous API")
     response = requests.get(TAG_ENDPOINT, headers=HEADERS).json()['list']
     tags = [[line['id'], line['tagName']] for line in response]
     query = """
@@ -49,11 +50,11 @@ def insert_tags():
         VALUES(%s, %s);
     """
     cursor.executemany(query, tags)
-    cursor.execute("SELECT * FROM tags LIMIT 3;")
-    print("Tags:", cursor.fetchall())
+    print("Tags inserted")
 
 # Download and insert org groups from Virtuous API
 def insert_org_groups():
+    print("Pulling org groups from Virtuous API")
     response = requests.get(ORG_GROUP_ENDPOINT, headers=HEADERS).json()['list']
     org_groups = [[line['id'], line['name']] for line in response]
     query = """
@@ -64,13 +65,13 @@ def insert_org_groups():
         VALUES(%s, %s);
     """
     cursor.executemany(query, org_groups)
-    cursor.execute("SELECT * FROM org_groups LIMIT 3;")
-    print("Org Groups:", cursor.fetchall())
+    print("Org groups inserted")
 
 # Reads and formats the Virtuous exports and returns the data
 def read_virtuous_exports():
     # Helper function for read_virtuous_exports 
     def get_csv_file(filename):
+        print("Reading:", filename)
         try:
             with open(f"virtuous_exports/{filename}", 'r', encoding='utf-8') as f:
                 f.readline()
@@ -79,7 +80,7 @@ def read_virtuous_exports():
             with open(f"src/database/virtuous_exports/{filename}", 'r', encoding='utf-8') as f:
                 f.readline()
                 return_data = f.readlines()
-        return_data = [line.strip().split(',') for line in return_data]
+        return_data = [line.strip().split('","') for line in return_data]
         return_data = [[col.strip('"') for col in row] for row in return_data]
         return return_data
 
@@ -109,16 +110,18 @@ def read_virtuous_exports():
     
     # Helper function for read_virtuous_exports
     def format_date(date):
-        return datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
+        return None if date == "" else datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
 
     # Import segment data
     segment_data = get_csv_file("Segment Export.csv")
     segment_data = [[int(line[0])] + line[1:] for line in segment_data]
+    print("Segment data imported")
 
     # Import campaign data
     campaign_data = get_csv_file("Campaign Export.csv")
     campaign_data = [[int(line[0])] + line[1:] for line in campaign_data]
     campaign_data.insert(0, [0, 'Archived Campaign'])
+    print("Campaign data imported")
 
     # Import gift data
     gift_data = get_csv_file("All Gifts.csv")
@@ -130,6 +133,7 @@ def read_virtuous_exports():
         [int(line[4])] + 
         [None if line[5] == '' else int(line[5])] +
         line[6:] for line in gift_data]
+    print("Gift data imported")
     
     # Import individual data
     individual_data = get_csv_file("All Individuals.csv")
@@ -138,6 +142,7 @@ def read_virtuous_exports():
         individual[4] = format_phone_number(individual)
         if individual[5] == "":
             individual[5] = None
+    print("Individual data imported")
 
     # Import contact data
     contact_data = get_csv_file("All Contacts.csv")
@@ -145,10 +150,11 @@ def read_virtuous_exports():
         [int(line[0])] + 
         [line[1]] +
         [line[2]] +
-        [Decimal(line[3])] +  # here is the error
+        [Decimal(line[3])] +
         [format_date(line[4])] +
-        line[5:] for line in contact_data]
-    print()
+        [line[5].split(';')] +
+        [line[6].split(';')] for line in contact_data]
+    print("Contact data imported")
     
     return segment_data, campaign_data, gift_data, individual_data, contact_data
 
@@ -186,6 +192,8 @@ def fix_segments(segment_data, campaign_data, gift_data):
 
 # Gets the communications for each campaign (see comments for more info)
 def get_communications(campaign_data):
+    print("Pulling communications from Virtuous API")
+
     # Code 500. If virtuous fixes their api then use this code but for now it is broken
     # url = "https://api.virtuoussoftware.com/api/Communication/Query?skip=0&take=1000"
     # data = {"groups": []}
@@ -194,32 +202,36 @@ def get_communications(campaign_data):
     # response = requests.post(url, data=json.dumps(data), headers=HEADERS).json()
     
     # Once used just load from the file to not run up the rate limit
-    # first = True
-    # communication_data = []
-    # for campaign in campaign_data:
-    #     print(f"{campaign[0]}", end="\r")
-    #     if first:
-    #         first = False
-    #         continue
-    #     url = f"https://api.virtuoussoftware.com/api/Communication/ByCampaign/{campaign[0]}?skip=0&take=100"
-    #     response = requests.get(url, headers=HEADERS).json()
-    #     total = response['total']
-    #     communication_data.append(response['list'])
-    #     if total <= 100:
-    #         continue
-    #     cur_total = 100
-    #     while cur_total < total:
-    #         url = f"https://api.virtuoussoftware.com/api/Communication/ByCampaign/{campaign[0]}?skip={cur_total}&take=100"
-    #         response = requests.get(url, headers=HEADERS).json()
-    #         communication_data[len(communication_data) - 1] += response['list']
-    #         cur_total += 100
+    first = True
+    communication_data = []
+    for campaign in campaign_data:
+        print(f"{campaign[0]}", end="\r")
+        if first:
+            first = False
+            continue
+        url = f"https://api.virtuoussoftware.com/api/Communication/ByCampaign/{campaign[0]}?skip=0&take=100"
+        response = requests.get(url, headers=HEADERS).json()
+        total = response['total']
+        communication_data.append(response['list'])
+        if total <= 100:
+            continue
+        cur_total = 100
+        while cur_total < total:
+            url = f"https://api.virtuoussoftware.com/api/Communication/ByCampaign/{campaign[0]}?skip={cur_total}&take=100"
+            response = requests.get(url, headers=HEADERS).json()
+            communication_data[len(communication_data) - 1] += response['list']
+            cur_total += 100
+    print("Communications imported")
 
-    # with open("temp_communications3.json", 'w') as f:
+    # Saves the communication data for testing
+    # with open("temp_communications.json", 'w') as f:
     #     json.dump(communication_data, f)
 
-    with open("temp_communications3.json", "r") as file:
-        loaded_data = json.load(file)
-    return loaded_data
+    # Loads the communication data for testing
+    # with open("temp_communications.json", "r") as file:
+    #     communication_data = json.load(file)
+
+    return communication_data
 
 # Removes unnecessary columns from the data
 def fix_communications(communication_data):
@@ -228,35 +240,99 @@ def fix_communications(communication_data):
         for comm in communication:
             new_communication_data.append([comm['communicationId'], comm['name'], comm['channelType'], comm['campaignId']])
     return new_communication_data
-    
+
+# Inserts the data into the database
+def insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data):
+    insert_contacts_query = """
+    INSERT INTO contacts (ContactID, ContactName, ContactType, LastGiftAmount, LastGiftDate) 
+    VALUES (%s, %s, %s, %s, %s);
+    """
+    insert_individuals_query = """
+    INSERT INTO individuals (IndividualID, ContactID, FirstName, LastName, PhoneNumber, Email) 
+    VALUES (%s, %s, %s, %s, %s, %s);
+    """
+    insert_campaigns_query = """
+    INSERT INTO campaigns (CampaignID, CampaignName) 
+    VALUES (%s, %s);
+    """
+    insert_communications_query = """
+    INSERT INTO communications (CommunicationID, CommunicationName, ChannelType, CampaignID) 
+    VALUES (%s, %s, %s, %s);
+    """
+    insert_segments_query = """
+    INSERT INTO segments (SegmentID, SegmentCode, SegmentName, CampaignID) 
+    VALUES (%s, %s, %s, %s);
+    """
+    insert_gifts_query = """
+    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
+    """
+    insert_contact_tag_query = """
+    INSERT INTO contact_tags (ContactID, TagID)
+    VALUES (%s, %s);"""
+    insert_contact_org_group_query = """
+    INSERT INTO contact_org_groups (ContactID, OrgGroupID)
+    VALUES (%s, %s);"""
+
+    tags = [line[6] for line in contact_data]
+    org_groups = [line[5] for line in contact_data]
+    contact_data = [line[:5] for line in contact_data]
+    cursor.execute("SELECT * FROM tags;")
+    tag_dict = {line[1]: line[0] for line in cursor.fetchall()}
+    cursor.execute("SELECT * FROM org_groups;")
+    org_group_dict = {line[1]: line[0] for line in cursor.fetchall()}
+
+    cursor.executemany(insert_contacts_query, contact_data)
+    print("Contacts inserted")
+    cursor.executemany(insert_individuals_query, individual_data)
+    print("Individuals inserted")
+    cursor.executemany(insert_campaigns_query, campaign_data)
+    print("Campaigns inserted")
+    cursor.executemany(insert_communications_query, communication_data)
+    print("Communications inserted")
+    cursor.executemany(insert_segments_query, segment_data)
+    print("Segments inserted")
+    cursor.executemany(insert_gifts_query, gift_data)
+    print("Gifts inserted")
+
+    for i, contact in enumerate(contact_data):
+        print(f"Tags/OrgGroups Inserted: {i + 1}/{len(contact_data)}", end="\r")
+        try:
+            if tags[i][0] != "":
+                tag_insert = [[contact[0], tag_dict[tag]] for tag in tags[i]]
+                cursor.executemany(insert_contact_tag_query, tag_insert)
+        except KeyError:
+            pass
+        try:
+            if org_groups[i][0] != "":
+                org_group_insert = [[contact[0], org_group_dict[org_group]] for org_group in org_groups[i]]
+                cursor.executemany(insert_contact_org_group_query, org_group_insert)
+        except KeyError:
+            pass
+
+    print("\nTags and org groups inserted")
+    print("Database created")
+
 
 if __name__ == "__main__":
-    # conn = mysql.connector.connect(
-    #     host="localhost",  # "100.93.36.64",
-    #     user="mike",
-    #     password="Bigfoot22!",
-    #     database="VirtuousDB"
-    # )
-    # cursor = conn.cursor()
+    conn = mysql.connector.connect(
+        host="100.93.36.64",
+        user="mike",
+        password="Bigfoot22!",
+        database="VirtuousDB"
+    )
+    cursor = conn.cursor()
 
-    # create_tables()
-    # insert_tags()
-    # insert_org_groups()
+    create_tables()
+    insert_tags()
+    insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
-    print()
-    # segment & communication & campaign & gift & individual data is done
+    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
 
-
-
-    # conn.commit()
-    # cursor.close()
-    # conn.close()
-
-
-    # segments export gives ("Segment Id","Segment Code","Segment Name")
-    # gifts export gifts (Gift Id, Amount, Type, Date, ContactID, IndividualID, Segment Code)
-    # extras from gifts (campaign comm name, campaign name)
+    conn.commit()
+    cursor.close()
+    conn.close()
