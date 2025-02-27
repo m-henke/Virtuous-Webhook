@@ -268,10 +268,10 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
     insert_contact_tag_query = """
-    INSERT INTO contact_tags (ContactID, TagID)
+    INSERT IGNORE INTO contact_tags (ContactID, TagID)
     VALUES (%s, %s);"""
     insert_contact_org_group_query = """
-    INSERT INTO contact_org_groups (ContactID, OrgGroupID)
+    INSERT IGNORE INTO contact_org_groups (ContactID, OrgGroupID)
     VALUES (%s, %s);"""
 
     tags = [line[6] for line in contact_data]
