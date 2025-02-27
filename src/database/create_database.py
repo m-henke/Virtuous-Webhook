@@ -313,6 +313,18 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     print("\nTags and org groups inserted")
     print("Database created")
 
+def insert_org_group_history():
+    cursor.execute("SELECT * FROM contact_org_groups;")
+    data = [list(line) + ["2025-01-01", None] for line in cursor.fetchall()]
+    cursor.executemany("INSERT INTO org_group_history (ContactID, OrgGroupID, DateAdded, DateRemoved) VALUES (%s, %s, %s, %s);", data)
+    print("Org group history inserted")
+
+def insert_tag_history():
+    cursor.execute("SELECT * FROM contact_tags;")
+    data = [list(line) + ["2025-01-01", None] for line in cursor.fetchall()]
+    cursor.executemany("INSERT INTO tag_history (ContactID, TagID, DateAdded, DateRemoved) VALUES (%s, %s, %s, %s);", data)
+    print("Tag history inserted")
+
 
 if __name__ == "__main__":
     conn = mysql.connector.connect(
@@ -332,6 +344,8 @@ if __name__ == "__main__":
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
+    insert_org_group_history()
+    insert_tag_history()
 
     conn.commit()
     cursor.close()

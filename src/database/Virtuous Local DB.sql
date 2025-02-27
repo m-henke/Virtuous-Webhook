@@ -77,3 +77,19 @@ CREATE TABLE contact_org_groups (
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (OrgGroupID) REFERENCES org_groups (OrgGroupID)
 );
+
+CREATE TABLE org_group_history (
+  ID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  ContactID INT NOT NULL,
+  OrgGroupID INT NOT NULL,
+  DateAdded DATE NOT NULL,
+  DateRemoved DATE
+);
+
+CREATE TABLE tag_history (
+  ID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  ContactID INT NOT NULL,
+  TagID INT NOT NULL,
+  DateAdded DATE NOT NULL,
+  DateRemoved DATE
+);
