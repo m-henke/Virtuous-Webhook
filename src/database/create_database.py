@@ -2,7 +2,6 @@ import mysql.connector
 import requests, os
 from decimal import Decimal
 from datetime import datetime
-import json
 
 TAG_ENDPOINT = "https://api.virtuoussoftware.com/api/Tag?skip=0&take=1000"
 ORG_GROUP_ENDPOINT = "https://api.virtuoussoftware.com/api/OrganizationGroup?take=1000"
@@ -313,12 +312,14 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     print("\nTags and org groups inserted")
     print("Database created")
 
+# Creates the org group history
 def insert_org_group_history():
     cursor.execute("SELECT * FROM contact_org_groups;")
     data = [list(line) + ["2025-01-01", None] for line in cursor.fetchall()]
     cursor.executemany("INSERT INTO org_group_history (ContactID, OrgGroupID, DateAdded, DateRemoved) VALUES (%s, %s, %s, %s);", data)
     print("Org group history inserted")
 
+# Creates the tag history
 def insert_tag_history():
     cursor.execute("SELECT * FROM contact_tags;")
     data = [list(line) + ["2025-01-01", None] for line in cursor.fetchall()]
