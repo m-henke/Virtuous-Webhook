@@ -1,7 +1,7 @@
 {
   "name": "virtuous-webhook",
   "version": "1.0.0",
-  "description": "",
+  "description": "Maintain a local mysql database that is automatically updated using webhooks",
   "license": "ISC",
   "author": "Michael Henke",
   "type": "commonjs",
@@ -11,6 +11,7 @@
     "start": "node src/server"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "mysql2": "^3.12.0"
   }
 }
