@@ -54,9 +54,9 @@ function individual_create(individual, contactID, pool) {
 
         for (let i = 0; i < individual.contactMethods.length; i++) {
             const method = individual.contactMethods[i];
-            if (method.type.toLowerCase().includes("email")) {
+            if (method.type.toLowerCase().includes("email") && method.isPrimary) {
                 email = method.value;
-            } else if (method.type.toLowerCase().includes("phone")) {
+            } else if (method.type.toLowerCase().includes("phone") && method.isPrimary) {
                 phone = formatPhoneNumber(method.value);
             }
         }
@@ -68,8 +68,17 @@ function individual_create(individual, contactID, pool) {
                 return reject(err);
             }
             resolve(results);
-        })
+        });
     });
+}
+
+// Helper function to get the current date in mysql format
+function getTodaysDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
 }
 
 function tag_create(tag, contactID, pool) {
@@ -80,23 +89,50 @@ function tag_create(tag, contactID, pool) {
                 return reject(err);
             }
             const insert_query = "INSERT INTO contact_tags (ContactID, TagID) VALUES (?, ?);"
-            pool.query(insert_query, [contactID, results[0].TagID], (err, results) => {
+            pool.query(insert_query, [contactID, results[0].TagID], (err) => {
+                if (err) {
+                    return reject(err);
+                }
+            });
+            const tag_history_query = "INSERT INTO tag_history (ContactID, TagID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);"
+            pool.query(tag_history_query, [contactID, results[0].TagID, getTodaysDate(), null], (err, results) => {
                 if (err) {
                     return reject(err);
                 }
                 return resolve(results);
-            })
-        })
+            });
+        });
     });
 }
 
 function org_group_create(org, contactID, pool) {
-
+    return new Promise((resolve, reject) => {
+        const select_query = `SELECT OrgGroupID FROM org_groups WHERE OrgGroupName = ?;`;
+        pool.query(select_query, [org], (err, results) => {
+            if (err) {
+                return reject(err);
+            }
+            const insert_query = "INSERT INTO contact_org_groups (ContactID, OrgGroupID) VALUES (?, ?);";
+            pool.query(insert_query, [contactID, results[0].OrgGroupID], (err, results) => {
+                if (err) {
+                    return reject(err);
+                }
+            });
+            const org_history_query = "INSERT INTO org_group_history (ContactID, OrgGroupID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);";
+            pool.query(org_history_query, [contactID, results[0].OrgGroupID, getTodaysDate(), null], (err, results) => {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(results);
+            });
+        });
+    });
 }
 
 module.exports = {
     contact_create,
     individual_create,
     tag_create,
-    org_group_create
+    org_group_create,
+    getTodaysDate
 }

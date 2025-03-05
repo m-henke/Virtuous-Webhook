@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
-const { contact_create, individual_create, tag_create, org_group_create } = require('./updater_files/contact_create')
+const { contact_create, individual_create, tag_create, org_group_create } = require('./updater_files/contact_create');
+const { contact_update, individual_update, tag_update, org_group_update } = require('./updater_files/contact_update');
 const server = express();
 const port = 80;
 
@@ -35,25 +36,45 @@ server.post("/receive-webhook", (req, res) => {
                         console.error(err);
                     });
                 }
-                // for (let i = 0; i < data.contact.organizationGroups.length; i++) {
-                //     org_group_create(data.contact.organizationGroups[i], data.contact.id, pool).catch(err => {
-                //         console.error(err);
-                //     })
-                // }
+                for (let i = 0; i < data.contact.organizationGroups.length; i++) {
+                    org_group_create(data.contact.organizationGroups[i], data.contact.id, pool).catch(err => {
+                        console.error(err);
+                    })
+                }
                 res.status(200).send("success");
             }).catch(err => {
                 console.error(err);
                 res.status(500).send("failure");
             });
             break;
+
         case "ContactUpdate":
-            contact_update(data.contact);
+            contact_update(data.contact, pool).then(() => {
+                for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
+                    individual_update(data.contact.contactIndividuals[i], pool).catch(err => {
+                        console.error(err);
+                    });
+                }
+                tag_update(data.contact.tags, data.contact.id, pool).catch(err => {
+                    console.error(err);
+                });
+                org_group_update(data.contact.organizationGroups, data.contact.id, pool).catch(err => {
+                    console.error(err);
+                });
+                res.status(200).send("success");
+            }).catch(err => {
+                console.error(err);
+                res.status(500).send("failure");
+            });
             break;
+
         case "GiftCreate":
-            gift_create(data.gift);
+            // gift_create(data.gift);
             break;
+
         default:
-            res.status(400).send('unsupported event');
+            // res.status(400).send('unsupported event');
+            console.log("unsupported event");
     }
 });
 
