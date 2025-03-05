@@ -47,12 +47,10 @@ server.post("/receive-webhook", (req, res) => {
             break;
 
         case "GiftCreate":
-            // gift_create(data.gift);
             break;
 
         default:
-            // res.status(400).send('unsupported event');
-            console.log("unsupported event");
+            res.status(400).send('unsupported event');
     }
 });
 
