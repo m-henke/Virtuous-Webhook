@@ -1,5 +1,5 @@
 const { response } = require("express");
-const { tag_create, org_group_create, getTodaysDate } = require("./contact_create")
+const { tag_create, org_group_create, getTodaysDate, formatPhoneNumber } = require("./contact_create")
 
 function contact_update(contact, pool) {
     return new Promise((resolve, reject) => {

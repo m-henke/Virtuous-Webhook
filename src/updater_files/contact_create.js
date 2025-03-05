@@ -1,3 +1,5 @@
+const { format } = require("mysql2");
+
 // Helper function used to get phone number in a usable format
 function formatPhoneNumber(phoneNumber) {
     // Too short to be a full number
@@ -134,5 +136,6 @@ module.exports = {
     individual_create,
     tag_create,
     org_group_create,
-    getTodaysDate
+    getTodaysDate,
+    formatPhoneNumber
 }
