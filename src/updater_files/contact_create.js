@@ -131,11 +131,35 @@ function org_group_create(org, contactID, pool) {
     });
 }
 
+function run_contact_create(data, pool) {
+    return new Promise((resolve, reject) => {
+        contact_create(data.contact, pool).then(() => {
+            for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
+                individual_create(data.contact.contactIndividuals[i], data.contact.id, pool).catch(err => {
+                    return reject(err);
+                });
+            }
+            for (let i = 0; i < data.contact.tags.length; i++) {
+                tag_create(data.contact.tags[i], data.contact.id, pool).catch(err => {
+                    return reject(err);
+                });
+            }
+            for (let i = 0; i < data.contact.organizationGroups.length; i++) {
+                org_group_create(data.contact.organizationGroups[i], data.contact.id, pool).catch(err => {
+                    return reject(err);
+                })
+            }
+            return resolve();
+        }).catch(err => {
+            return reject(err);
+        });
+    });
+}
+
 module.exports = {
-    contact_create,
-    individual_create,
     tag_create,
     org_group_create,
     get_todays_date,
-    format_phone_number
+    format_phone_number,
+    run_contact_create
 }

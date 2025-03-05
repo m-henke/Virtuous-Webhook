@@ -139,9 +139,27 @@ function org_group_update(org_groups, contactID, pool) {
     });
 }
 
+function run_contact_update(data, pool) {
+    return new Promise((resolve, reject) => {
+        contact_update(data.contact, pool).then(() => {
+            for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
+                individual_update(data.contact.contactIndividuals[i], pool).catch(err => {
+                    return reject(err);
+                });
+            }
+            tag_update(data.contact.tags, data.contact.id, pool).catch(err => {
+                return reject(err);
+            });
+            org_group_update(data.contact.organizationGroups, data.contact.id, pool).catch(err => {
+                return reject(err);
+            });
+            return resolve();
+        }).catch(err => {
+            return reject(err);
+        });
+    });
+}
+
 module.exports = {
-    contact_update,
-    individual_update,
-    tag_update,
-    org_group_update
+    run_contact_update
 }
