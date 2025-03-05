@@ -1,4 +1,3 @@
-const { response } = require("express");
 const { tag_create, org_group_create, get_todays_date, format_phone_number } = require("./contact_create")
 
 function contact_update(contact, pool) {

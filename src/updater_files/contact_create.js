@@ -1,5 +1,3 @@
-const { format } = require("mysql2");
-
 // Helper function used to get phone number in a usable format
 function format_phone_number(phoneNumber) {
     // Too short to be a full number
