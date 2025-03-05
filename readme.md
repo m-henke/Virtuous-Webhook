@@ -25,3 +25,5 @@ The get communication function contains commented code
     then comment everything except for the code that reads the json file and returns it
     It also contains code that can do all of this in one query however Virtuous API is broken so it won't work
         if it works in the future it might be worth updating this
+
+Create LOCAL_DB_MIKE_PSWD environmental variable

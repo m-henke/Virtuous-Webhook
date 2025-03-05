@@ -12,7 +12,7 @@ server.use(express.json());
 const pool = mysql.createPool({
     host: "100.93.36.64",
     user: "mike",
-    password: "Bigfoot22!",
+    password: process.env.LOCAL_DB_MIKE_PSWD,
     database: "VirtuousDB",
     waitForConnections: true,
     connectionLimit: 10,
