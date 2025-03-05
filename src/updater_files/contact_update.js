@@ -1,5 +1,5 @@
 const { response } = require("express");
-const { tag_create, org_group_create, getTodaysDate, formatPhoneNumber } = require("./contact_create")
+const { tag_create, org_group_create, get_todays_date, format_phone_number } = require("./contact_create")
 
 function contact_update(contact, pool) {
     return new Promise((resolve, reject) => {
@@ -26,7 +26,7 @@ function individual_update(individual, pool) {
             if (method.type.toLowerCase().includes("email") && method.isPrimary) {
                 email = method.value;
             } else if (method.type.toLowerCase().includes("phone") && method.isPrimary) {
-                phone = formatPhoneNumber(method.value);
+                phone = format_phone_number(method.value);
             }
         }
 
@@ -71,7 +71,7 @@ function tag_update(tags, contactID, pool) {
             for (let i = 0; i < response.length; i++) {
                 if (tag_data[response[i].TagName] == undefined) {
                     tag_history_query = "UPDATE tag_history SET DateRemoved = ? WHERE ContactID = ? and TagID = ?;";
-                    pool.query(tag_history_query, [getTodaysDate(), contactID, response[i].TagID], (err) => {
+                    pool.query(tag_history_query, [get_todays_date(), contactID, response[i].TagID], (err) => {
                         if (err) {
                             return reject(err);
                         }
@@ -120,7 +120,7 @@ function org_group_update(org_groups, contactID, pool) {
             for (let i = 0; i < response.length; i++) {
                 if (org_data[response[i].OrgGroupName] == undefined) {
                     org_history_query = "UPDATE org_group_history SET DateRemoved = ? WHERE ContactID = ? and OrgGroupID = ?;";
-                    pool.query(org_history_query, [getTodaysDate(), contactID, response[i].OrgGroupID], (err) => {
+                    pool.query(org_history_query, [get_todays_date(), contactID, response[i].OrgGroupID], (err) => {
                         if (err) {
                             return reject(err);
                         }

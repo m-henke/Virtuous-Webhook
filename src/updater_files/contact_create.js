@@ -1,7 +1,7 @@
 const { format } = require("mysql2");
 
 // Helper function used to get phone number in a usable format
-function formatPhoneNumber(phoneNumber) {
+function format_phone_number(phoneNumber) {
     // Too short to be a full number
     if (phoneNumber.length < 10) {
         return null;
@@ -59,7 +59,7 @@ function individual_create(individual, contactID, pool) {
             if (method.type.toLowerCase().includes("email") && method.isPrimary) {
                 email = method.value;
             } else if (method.type.toLowerCase().includes("phone") && method.isPrimary) {
-                phone = formatPhoneNumber(method.value);
+                phone = format_phone_number(method.value);
             }
         }
 
@@ -75,7 +75,7 @@ function individual_create(individual, contactID, pool) {
 }
 
 // Helper function to get the current date in mysql format
-function getTodaysDate() {
+function get_todays_date() {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -97,7 +97,7 @@ function tag_create(tag, contactID, pool) {
                 }
             });
             const tag_history_query = "INSERT INTO tag_history (ContactID, TagID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);"
-            pool.query(tag_history_query, [contactID, results[0].TagID, getTodaysDate(), null], (err, results) => {
+            pool.query(tag_history_query, [contactID, results[0].TagID, get_todays_date(), null], (err, results) => {
                 if (err) {
                     return reject(err);
                 }
@@ -121,7 +121,7 @@ function org_group_create(org, contactID, pool) {
                 }
             });
             const org_history_query = "INSERT INTO org_group_history (ContactID, OrgGroupID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);";
-            pool.query(org_history_query, [contactID, results[0].OrgGroupID, getTodaysDate(), null], (err, results) => {
+            pool.query(org_history_query, [contactID, results[0].OrgGroupID, get_todays_date(), null], (err, results) => {
                 if (err) {
                     return reject(err);
                 }
@@ -136,6 +136,6 @@ module.exports = {
     individual_create,
     tag_create,
     org_group_create,
-    getTodaysDate,
-    formatPhoneNumber
+    get_todays_date,
+    format_phone_number
 }
