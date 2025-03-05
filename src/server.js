@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const { run_contact_create } = require('./updater_files/contact_create');
 const { run_contact_update } = require('./updater_files/contact_update');
+const { run_gift_create } = require('./updater_files/gift_create');
 const server = express();
 const port = 80;
 
@@ -47,6 +48,14 @@ server.post("/receive-webhook", (req, res) => {
             break;
 
         case "GiftCreate":
+            run_gift_create(data, pool)
+            .then(() => {
+                res.status(200).send("success");
+            })
+            .catch((err) => {
+                console.error(err);
+                res.status(500).send("failure");
+            })
             break;
 
         default:
