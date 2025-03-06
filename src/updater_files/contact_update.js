@@ -138,25 +138,22 @@ function org_group_update(org_groups, contactID, pool) {
     });
 }
 
-function run_contact_update(data, pool) {
-    return new Promise((resolve, reject) => {
-        contact_update(data.contact, pool).then(() => {
-            for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
-                individual_update(data.contact.contactIndividuals[i], pool).catch(err => {
-                    return reject(err);
-                });
-            }
-            tag_update(data.contact.tags, data.contact.id, pool).catch(err => {
-                return reject(err);
-            });
-            org_group_update(data.contact.organizationGroups, data.contact.id, pool).catch(err => {
-                return reject(err);
-            });
-            return resolve();
-        }).catch(err => {
-            return reject(err);
-        });
-    });
+async function run_contact_update(data, pool) {
+    try {
+        await contact_update(data.contact, pool);
+
+        for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
+            await individual_update(data.contact.contactIndividuals[i], pool);
+        }
+
+        await tag_update(data.contact.tags, data.contact.id, pool);
+
+        await org_group_update(data.contact.organizationGroups, data.contact.id, pool);
+
+        return Promise.resolve();
+    } catch (err) {
+        return Promise.reject(err);
+    }
 }
 
 module.exports = {
