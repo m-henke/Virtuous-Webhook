@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 // Helper function used to get phone number in a usable format
 function format_phone_number(phoneNumber) {
     // Too short to be a full number
@@ -81,13 +83,39 @@ function get_todays_date() {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-function tag_create(tag, contactID, pool) {
+async function tag_create(tag, contactID, pool) {
+    var found = false;
+    const select_query = `SELECT TagID FROM tags WHERE TagName = ?;`;
+    pool.query(select_query, [tag], (err, results) => {
+        if (err) {
+            return reject(err);
+        }
+
+        if (results.length > 0) {
+            found = true;
+        }
+    });
+    if (!found) {
+        axios.post("https://api.virtuoussoftware.com/api/Tag/Search?take=1", 
+            {headers:{'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}}, 
+            {data: {"search": tag}})
+            .then((response) => {
+                const insert_query = "INSERT IGNORE INTO tags (TagID, TagName) VALUES (?, ?);";
+                pool.query(insert_query, [response.list[0].id, response.list[0].tagName], (err) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+                })
+            }).catch((err) => {
+                throw new Error(err);
+            });
+    }
     return new Promise((resolve, reject) => {
-        const select_query = `SELECT TagID FROM tags WHERE TagName = ?;`;
         pool.query(select_query, [tag], (err, results) => {
             if (err) {
                 return reject(err);
             }
+            
             const insert_query = "INSERT INTO contact_tags (ContactID, TagID) VALUES (?, ?);"
             pool.query(insert_query, [contactID, results[0].TagID], (err) => {
                 if (err) {
