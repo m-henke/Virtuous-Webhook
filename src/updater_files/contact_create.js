@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { query } = require('express');
 
 // Helper function used to get phone number in a usable format
 function format_phone_number(phoneNumber) {
@@ -84,102 +85,133 @@ function get_todays_date() {
 }
 
 async function tag_create(tag, contactID, pool) {
-    var found = false;
-    const select_query = `SELECT TagID FROM tags WHERE TagName = ?;`;
-    pool.query(select_query, [tag], (err, results) => {
-        if (err) {
-            return reject(err);
-        }
+    return new Promise(async (resolve, reject) => {
+        let found = false;
+        const select_query = "SELECT TagID FROM tags WHERE TagName = ?;";
 
+        const queryAsync = (query, params) => {
+            return new Promise((resolve, reject) => {
+                pool.query(query, params, (err, results) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(results);
+                });
+            });
+        };
+
+        const results = await queryAsync(select_query, [tag]).catch((err) => {
+            return reject(err);
+        });
+        
         if (results.length > 0) {
             found = true;
         }
-    });
-    if (!found) {
-        axios.post("https://api.virtuoussoftware.com/api/Tag/Search?take=1", 
-            {headers:{'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}}, 
-            {data: {"search": tag}})
-            .then((response) => {
-                const insert_query = "INSERT IGNORE INTO tags (TagID, TagName) VALUES (?, ?);";
-                pool.query(insert_query, [response.list[0].id, response.list[0].tagName], (err) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-                })
-            }).catch((err) => {
-                throw new Error(err);
-            });
-    }
-    return new Promise((resolve, reject) => {
-        pool.query(select_query, [tag], (err, results) => {
-            if (err) {
-                return reject(err);
+
+        if (!found) {
+            const response = await axios.post("https://api.virtuoussoftware.com/api/Tag/Search?take=100", 
+                {'search': tag}, 
+                {headers:{'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
+            let new_tag = null;
+            for (const found_tag of response.data.list) {
+                if (found_tag.tagName == tag) {
+                    new_tag = found_tag;
+                    break;
+                }
             }
-            
-            const insert_query = "INSERT INTO contact_tags (ContactID, TagID) VALUES (?, ?);"
-            pool.query(insert_query, [contactID, results[0].TagID], (err) => {
-                if (err) {
-                    return reject(err);
-                }
-            });
-            const tag_history_query = "INSERT INTO tag_history (ContactID, TagID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);"
-            pool.query(tag_history_query, [contactID, results[0].TagID, get_todays_date(), null], (err, results) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(results);
-            });
+            if (new_tag == null) {
+                return reject("New tag not found in Virtuous");
+            }
+            const insert_tag_query = "INSERT INTO tags (TagID, TagName) VALUES (?, ?);";
+            await queryAsync(insert_tag_query, [new_tag.id, new_tag.tagName]);
+        }
+
+        const finalResults = await queryAsync(select_query, [tag]);
+        const insert_contact_tag_query = "INSERT INTO contact_tags (ContactID, TagID) VALUES (?, ?);";
+        const insert_tag_history_query = "INSERT INTO tag_history (ContactID, TagID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);";
+        await queryAsync(insert_contact_tag_query, [contactID, finalResults[0].TagID]).catch((err) => {
+            return reject(err);
         });
+        await queryAsync(insert_tag_history_query, [contactID, finalResults[0].TagID, get_todays_date(), null]).catch((err) => {
+            return reject(err);
+        });
+        return resolve();
     });
 }
 
 function org_group_create(org, contactID, pool) {
-    return new Promise((resolve, reject) => {
-        const select_query = `SELECT OrgGroupID FROM org_groups WHERE OrgGroupName = ?;`;
-        pool.query(select_query, [org], (err, results) => {
-            if (err) {
-                return reject(err);
-            }
-            const insert_query = "INSERT INTO contact_org_groups (ContactID, OrgGroupID) VALUES (?, ?);";
-            pool.query(insert_query, [contactID, results[0].OrgGroupID], (err, results) => {
-                if (err) {
-                    return reject(err);
-                }
+    return new Promise(async (resolve, reject) => {
+        let found = false;
+        const select_query = "SELECT OrgGroupID FROM org_groups WHERE OrgGroupName = ?;";
+
+        const queryAsync = (query, params) => {
+            return new Promise((resolve, reject) => {
+                pool.query(query, params, (err, results) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(results);
+                });
             });
-            const org_history_query = "INSERT INTO org_group_history (ContactID, OrgGroupID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);";
-            pool.query(org_history_query, [contactID, results[0].OrgGroupID, get_todays_date(), null], (err, results) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(results);
-            });
+        };
+
+        const results = await queryAsync(select_query, [org]).catch((err) => {
+            return reject(err);
         });
+
+        if (results.length > 0) {
+            found = true;
+        }
+
+        if (!found) {
+            const response = await axios.get(`https://api.virtuoussoftware.com/api/OrganizationGroup/ByContact/${contactID}`, 
+                {headers:{'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
+            let new_org = null;
+            for (const found_org of response.data) {
+                if (found_org.name == org) {
+                    new_org = found_org;
+                    break;
+                }
+            }
+            if (new_org == null) {
+                return reject("New org not found in Virtuous");
+            }
+            const insert_org_query = "INSERT INTO org_groups (OrgGroupID, OrgGroupName) VALUES (?, ?);";
+            await queryAsync(insert_org_query, [new_org.id, new_org.name]);
+        }
+
+        const finalResults = await queryAsync(select_query, [org]);
+        const insert_contact_org_query = "INSERT INTO contact_org_groups (ContactID, OrgGroupID) VALUES (?, ?);";
+        const insert_org_history_query = "INSERT INTO org_group_history (ContactID, OrgGroupID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);";
+        await queryAsync(insert_contact_org_query, [contactID, finalResults[0].OrgGroupID]).catch((err) => {
+            return reject(err);
+        });
+        await queryAsync(insert_org_history_query, [contactID, finalResults[0].OrgGroupID, get_todays_date(), null]).catch((err) => {
+            return reject(err);
+        });
+        return resolve();
     });
 }
 
-function run_contact_create(data, pool) {
-    return new Promise((resolve, reject) => {
-        contact_create(data.contact, pool).then(() => {
-            for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
-                individual_create(data.contact.contactIndividuals[i], data.contact.id, pool).catch(err => {
-                    return reject(err);
-                });
-            }
-            for (let i = 0; i < data.contact.tags.length; i++) {
-                tag_create(data.contact.tags[i], data.contact.id, pool).catch(err => {
-                    return reject(err);
-                });
-            }
-            for (let i = 0; i < data.contact.organizationGroups.length; i++) {
-                org_group_create(data.contact.organizationGroups[i], data.contact.id, pool).catch(err => {
-                    return reject(err);
-                })
-            }
-            return resolve();
-        }).catch(err => {
-            return reject(err);
-        });
-    });
+async function run_contact_create(data, pool) {
+    try {
+        await contact_create(data.contact, pool);
+        for (let i = 0; i < data.contact.contactIndividuals.length; i++) {
+            await individual_create(data.contact.contactIndividuals[i], data.contact.id, pool);
+        }
+
+        for (let i = 0; i < data.contact.tags.length; i++) {
+            await tag_create(data.contact.tags[i], data.contact.id, pool);
+        }
+
+        for (let i = 0; i < data.contact.organizationGroups.length; i++) {
+            await org_group_create(data.contact.organizationGroups[i], data.contact.id, pool);
+        }
+
+        return Promise.resolve();
+    } catch (err) {
+        return Promise.reject(err);
+    }
 }
 
 module.exports = {
