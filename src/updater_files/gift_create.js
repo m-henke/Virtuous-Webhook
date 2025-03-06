@@ -91,10 +91,11 @@ async function create_new_segment(gift, pool) {
 function run_gift_create(data, pool) {
     return new Promise((resolve, reject) => {
         gift_create(data.gift, pool).then(() => {
-            update_contact_gift_info(data.gift, pool).catch((err) => {
+            update_contact_gift_info(data.gift, pool).then((response) => {
+                return resolve(response);
+            }).catch((err) => {
                 return reject(err);
             });
-            return resolve();
         }).catch(err => {
             if (err.code == 'ER_NO_REFERENCED_ROW_2') {
                 create_new_segment(data.gift, pool).then(() => {
