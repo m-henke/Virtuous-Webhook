@@ -1,5 +1,4 @@
 const axios = require('axios');
-const { query } = require('express');
 
 // Helper function used to get phone number in a usable format
 function format_phone_number(phoneNumber) {

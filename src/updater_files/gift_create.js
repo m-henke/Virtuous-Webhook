@@ -1,4 +1,3 @@
-const { format } = require("express/lib/response");
 const axios = require("axios");
 
 // Helper function to take virtuous formatted date and make it usable for mysql
