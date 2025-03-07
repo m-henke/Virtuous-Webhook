@@ -27,3 +27,7 @@ The get communication function contains commented code
         if it works in the future it might be worth updating this
 
 Create LOCAL_DB_MIKE_PSWD, LOCAL_DB_HOST_IP, VIRTUOUS_TOKN environmental variables
+
+run the following commands
+    npm install
+    pip install requests mysql-connector-python
