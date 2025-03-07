@@ -22,7 +22,7 @@ async function update_contact_last_gift(gift, pool) {
             return resolve();
         }
 
-        if (gift.amount == last_gift_info[0].LastGiftAmount && format_date(gift.giftDateFormatted) == last_gift_info[0].LastGiftDate) {
+        if (Number(gift.amount) == Number(last_gift_info[0].LastGiftAmount) && new Date(format_date(gift.giftDateFormatted)).toISOString().split('T')[0] == new Date(last_gift_info[0].LastGiftDate).toISOString().split('T')[0]) {
             const select_prev_gift_query = "SELECT Amount, GiftDate FROM gifts WHERE ContactID = ? ORDER BY GiftDate DESC;";
             const old_gifts = await queryAsync(select_prev_gift_query, [gift.contactId]).catch((err) => {
                 return reject(err);
