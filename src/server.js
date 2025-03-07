@@ -3,6 +3,7 @@ const mysql = require('mysql2');
 const { run_contact_create } = require('./updater_files/contact_create');
 const { run_contact_update } = require('./updater_files/contact_update');
 const { run_gift_create } = require('./updater_files/gift_create');
+const { run_gift_update } = require('./updater_files/gift_update');
 const { notify_teams } = require('./utils/teams_notification');
 const server = express();
 const port = 80;
@@ -50,6 +51,17 @@ server.post("/receive-webhook", (req, res) => {
 
         case "GiftCreate":
             run_gift_create(data, pool)
+            .then(() => {
+                res.status(200).send("success");
+            })
+            .catch((err) => {
+                notify_teams(err, data.event);
+                res.status(500).send("failure");
+            })
+            break;
+
+        case "GiftUpdate":
+            run_gift_update(data, pool)
             .then(() => {
                 res.status(200).send("success");
             })
