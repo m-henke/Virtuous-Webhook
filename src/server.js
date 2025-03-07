@@ -71,7 +71,19 @@ server.post("/receive-webhook", (req, res) => {
             })
             break;
 
+        case "GiftDelete":
+            run_gift_delete(data, pool)
+            .then(() => {
+                res.status(200).send("success");
+            })
+            .catch((err) => {
+                notify_teams(err, data.event);
+                res.status(500).send("failure");
+            })
+            break;
+
         default:
+            notify_teams(`Unexpectedly Received '${data.event}' event which is not supported`, "server error");
             res.status(400).send('unsupported event');
     }
 });
