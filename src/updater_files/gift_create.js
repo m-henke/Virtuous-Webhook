@@ -106,6 +106,8 @@ function run_gift_create(data, pool) {
                 }).catch(seg_err => {
                     return reject(seg_err);
                 })
+            } else {
+                return reject(err);
             }
         });
     });
