@@ -112,5 +112,8 @@ function run_gift_create(data, pool) {
 }
 
 module.exports = {
-    run_gift_create
+    run_gift_create,
+    format_date,
+    update_contact_gift_info,
+    create_new_segment
 }
