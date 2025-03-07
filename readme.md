@@ -26,4 +26,4 @@ The get communication function contains commented code
     It also contains code that can do all of this in one query however Virtuous API is broken so it won't work
         if it works in the future it might be worth updating this
 
-Create LOCAL_DB_MIKE_PSWD, LOCAL_DB_HOST_IP environmental variables
+Create LOCAL_DB_MIKE_PSWD, LOCAL_DB_HOST_IP, VIRTUOUS_TOKN environmental variables
