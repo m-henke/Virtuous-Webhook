@@ -4,6 +4,7 @@ const { run_contact_create } = require('./updater_files/contact_create');
 const { run_contact_update } = require('./updater_files/contact_update');
 const { run_gift_create } = require('./updater_files/gift_create');
 const { run_gift_update } = require('./updater_files/gift_update');
+const { run_gift_delete } = require('./updater_files/gift_delete');
 const { notify_teams } = require('./utils/teams_notification');
 const server = express();
 const port = 80;
