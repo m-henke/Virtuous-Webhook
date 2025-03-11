@@ -126,7 +126,7 @@ async function tag_create(tag, contactID, pool) {
         }
 
         const finalResults = await queryAsync(select_query, [tag]);
-        const insert_contact_tag_query = "INSERT INTO contact_tags (ContactID, TagID) VALUES (?, ?);";
+        const insert_contact_tag_query = "INSERT IGNORE INTO contact_tags (ContactID, TagID) VALUES (?, ?);";
         const insert_tag_history_query = "INSERT INTO tag_history (ContactID, TagID, DateAdded, DateRemoved) VALUES (?, ?, ?, ?);";
         await queryAsync(insert_contact_tag_query, [contactID, finalResults[0].TagID]).catch((err) => {
             return reject(err);
