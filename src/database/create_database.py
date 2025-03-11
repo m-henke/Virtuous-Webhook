@@ -329,9 +329,9 @@ def insert_tag_history():
 
 if __name__ == "__main__":
     conn = mysql.connector.connect(
-        host="100.93.36.64",
+        host=os.getenv("LOCAL_DB_HOST_IP"),
         user="mike",
-        password="Bigfoot22!",
+        password=os.getenv("LOCAL_DB_MIKE_PSWD"),
         database="VirtuousDB"
     )
     cursor = conn.cursor()
