@@ -1,3 +1,4 @@
+const { query_async } = require('./contact_create');
 const axios = require("axios");
 
 // Helper function to take virtuous formatted date and make it usable for mysql
@@ -6,29 +7,16 @@ function format_date(date) {
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function gift_create(gift, pool) {
-    return new Promise((resolve, reject) => {
-        const gift_query = "INSERT INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode) VALUES (?, ?, ?, ?, ?, ?, ?);";
-        const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode];
-        pool.query(gift_query, values, (err, response) => {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(response);
-        })
-    });
+async function gift_create(gift, pool) {
+    const gift_query = "INSERT INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode) VALUES (?, ?, ?, ?, ?, ?, ?);";
+    const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode];
+    await query_async(pool, gift_query, values);
 }
 
-function update_contact_gift_info(gift, pool) {
-    return new Promise((resolve, reject) => {
-        const contact_update_query = "UPDATE contacts SET LastGiftAmount = ?, LastGiftDate = ? WHERE ContactID = ?;";
-        pool.query(contact_update_query, [gift.amount, format_date(gift.giftDateFormatted), gift.contactId], (err, response) => {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(response);
-        })
-    });
+async function update_contact_gift_info(gift, pool) {
+    const contact_update_query = "UPDATE contacts SET LastGiftAmount = ?, LastGiftDate = ? WHERE ContactID = ?;";
+    const values = [gift.amount, format_date(gift.giftDateFormatted), gift.contactId];
+    await query_async(pool, contact_update_query, values);
 }
 
 async function create_new_segment(gift, pool) {
@@ -53,64 +41,30 @@ async function create_new_segment(gift, pool) {
     const new_segment = seg_response.data;
     const new_communication = com_response.data;
 
-    return new Promise((resolve, reject) => {
-        Promise.all([
-            new Promise((res, rej) => {
-                pool.query(campaign_query, [new_segment.campaignId, new_segment.campaignName], (err) => {
-                    if (err) {
-                        return rej(err);
-                    }
-                    res();
-                });
-            }),
-            new Promise((res, rej) => {
-                pool.query(communication_query, [new_segment.communicationId, new_communication.name, new_communication.channelType, new_segment.campaignId], (err) => {
-                    if (err) {
-                        return rej(err);
-                    }
-                    res();
-                });
-            }),
-            new Promise((res, rej) => {
-                pool.query(segment_query, [new_segment.id, new_segment.code, new_segment.name, new_segment.campaignId], (err) => {
-                    if (err) {
-                        return rej(err);
-                    }
-                    res();
-                });
-            })
-        ]).then(() => {
-            resolve();
-        }).catch((err) => {
-            reject(err);
-        });
-    });
+    await query_async(pool, campaign_query, [new_segment.campaignId, new_segment.campaignName]);
+    await query_async(pool, communication_query, [new_segment.communicationId, new_communication.name, new_communication.channelType, new_segment.campaignId]);
+    await query_async(pool, segment_query, [new_segment.id, new_segment.code, new_segment.name, new_segment.campaignId]);
 }
 
-function run_gift_create(data, pool) {
-    return new Promise((resolve, reject) => {
-        gift_create(data.gift, pool).then(() => {
-            update_contact_gift_info(data.gift, pool).then((response) => {
-                return resolve(response);
-            }).catch((err) => {
-                return reject(err);
-            });
-        }).catch(err => {
-            if (err.code == 'ER_NO_REFERENCED_ROW_2') {
-                create_new_segment(data.gift, pool).then(() => {
-                    return gift_create(data.gift, pool);
-                }).then(() => {
-                    return update_contact_gift_info(data.gift, pool);
-                }).then(() => {
-                    return resolve();
-                }).catch(seg_err => {
-                    return reject(seg_err);
-                })
-            } else {
-                return reject(err);
+async function run_gift_create(data, pool) {
+    try {
+        await gift_create(data.gift, pool);
+        await update_contact_gift_info(data.gift, pool);
+        return Promise.resolve();
+    } catch (err) {
+        if (err.code == 'ER_NO_REFERENCED_ROW_2') {
+            try {
+                await create_new_segment(data.gift, pool);
+                await gift_create(data.gift, pool);
+                await update_contact_gift_info(data.gift, pool);
+                return Promise.resolve();
+            } catch (seg_err) {
+                return Promise.reject(seg_err);
             }
-        });
-    });
+        } else {
+            return Promise.reject(err);
+        }
+    }
 }
 
 module.exports = {

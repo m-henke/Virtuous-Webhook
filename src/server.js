@@ -24,68 +24,33 @@ const pool = mysql.createPool({
 });
 
 // Recieves and routes data posted to the server
-server.post("/receive-webhook", (req, res) => {
+server.post("/receive-webhook", async (req, res) => {
     const data = req.body;
     console.log(`Webhook Received: ${data.event}`)
-    switch (data.event) {
-        case "ContactCreate":
-            run_contact_create(data, pool)
-            .then(() => {
-                res.status(200).send("success");
-            })
-            .catch((err) => {
-                notify_teams(err, data.event);
-                res.status(500).send("failure");
-            })
-            break;
-
-        case "ContactUpdate":
-            run_contact_update(data, pool)
-            .then(() => {
-                res.status(200).send("success");
-            })
-            .catch((err) => {
-                notify_teams(err, data.event);
-                res.status(500).send("failure");
-            })
-            break;
-
-        case "GiftCreate":
-            run_gift_create(data, pool)
-            .then(() => {
-                res.status(200).send("success");
-            })
-            .catch((err) => {
-                notify_teams(err, data.event);
-                res.status(500).send("failure");
-            })
-            break;
-
-        case "GiftUpdate":
-            run_gift_update(data, pool)
-            .then(() => {
-                res.status(200).send("success");
-            })
-            .catch((err) => {
-                notify_teams(err, data.event);
-                res.status(500).send("failure");
-            })
-            break;
-
-        case "GiftDelete":
-            run_gift_delete(data, pool)
-            .then(() => {
-                res.status(200).send("success");
-            })
-            .catch((err) => {
-                notify_teams(err, data.event);
-                res.status(500).send("failure");
-            })
-            break;
-
-        default:
-            notify_teams(`Unexpectedly Received '${data.event}' event which is not supported`, "server error");
-            res.status(400).send('unsupported event');
+    try {
+        switch (data.event) {
+            case "ContactCreate":
+                await run_contact_create(data, pool);
+                break;
+            case "ContactUpdate":
+                await run_contact_update(data, pool);
+                break;
+            case "GiftCreate":
+                await run_gift_create(data, pool);
+                break;
+            case "GiftUpdate":
+                await run_gift_update(data, pool);
+                break;
+            case "GiftDelete":
+                await run_gift_delete(data, pool);
+                break;
+            default:
+                throw new Error(`Unsupported ${data.event} event`);
+        }
+        res.status(200).send("success");
+    } catch (err) {
+        notify_teams(err, data.event);
+        res.status(500).send("failure");
     }
 });
 
