@@ -37,7 +37,7 @@ async function tag_update(tags, contactID, pool) {
             }
         }
         if (!tag_data[tag]) {
-            await tag_create(tags[i], contactID, pool);
+            await tag_create(tag, contactID, pool);
         }
     }
 
