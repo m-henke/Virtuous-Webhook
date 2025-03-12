@@ -36,6 +36,15 @@ This project maintains a local MySQL database by automatically updating it using
 7) Open the terminal to `Virtuous-Webhook`
 8) Enter this command: `python3 src/database/create_database.py`
 
+### Setup ngrok
+1) [Setup instructions](https://dashboard.ngrok.com/get-started/setup/linux)
+2) Use provided command to start the static domain
+
+### Start program
+1) Start ngrok using the command
+2) Open terminal to `Virtuous-Webhook/`
+3) Start server `npm start`
+
 ## Notes
 - [Datebase Schema](https://dbdiagram.io/d/Local-Virtuous-Database-67bde7df263d6cf9a06b7d20)
 - Campaign ID == 0 means that it is an archived campaign
