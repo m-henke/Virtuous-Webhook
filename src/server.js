@@ -15,8 +15,8 @@ server.use(express.json());
 // Create mysql connection pool
 const pool = mysql.createPool({
     host: process.env.LOCAL_DB_HOST_IP,
-    user: "mike",
-    password: process.env.LOCAL_DB_MIKE_PSWD,
+    user: process.env.LOCAL_DB_USER,
+    password: process.env.LOCAL_DB_PSWD,
     database: "VirtuousDB",
     waitForConnections: true,
     connectionLimit: 10,
