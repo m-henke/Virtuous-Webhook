@@ -46,7 +46,7 @@ CREATE TABLE gifts (
   GiftDate DATE NOT NULL,
   ContactID INT NOT NULL,
   IndividualID INT,
-  SegmentCode VARCHAR(50) NOT NULL,
+  SegmentCode VARCHAR(50),
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID),
   FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
