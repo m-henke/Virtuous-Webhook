@@ -153,9 +153,9 @@ def read_virtuous_exports():
         if gift[9] in ("2263", "2300", "2305") or used_gift_id.get(gift[0], False):
             continue
         if bad_gift_id.get(gift[0], False):
-            gift[1] = Decimal(gift[10])
-        if gift[11] != "":
-            gift[4] = int(gift[11])
+            gift[1] = Decimal(gift[11])
+        if gift[10] != "":
+            gift[4] = int(gift[10])
         new_gift_data.append(gift[:9])
         used_gift_id[gift[0]] = True
     print("Gift data imported")
