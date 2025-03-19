@@ -137,6 +137,15 @@ def read_virtuous_exports():
     campaign_data.insert(0, [0, 'Archived Campaign'])
     print("Campaign data imported")
 
+    # Fix All Gifts file
+    with open("src/database/virtuous_exports/All Gifts.csv", 'r') as f:
+        data = [line.strip('\n') for line in f.readlines()]
+    for i, line in enumerate(data):
+        if line[-1] == ',' and i > 0:
+            data[i] += '""'
+    with open("src/database/virtuous_exports/All Gifts.csv", 'w') as f:
+        f.write('\n'.join(data))
+    
     # Import gift data
     gift_data = get_csv_file("All Gifts.csv")
     gift_data = [
@@ -181,16 +190,8 @@ def read_virtuous_exports():
         [line[5].split(';')] +
         [line[6].split(';')] for line in contact_data]
     print("Contact data imported")
-
-    # Import project data
-    project_data = get_csv_file("All Projects.csv")
-    project_data = [
-        [int(line[0])] +
-        line[1:] for line in project_data
-    ]
-    print("Project data imported")
     
-    return segment_data, campaign_data, new_gift_data, individual_data, contact_data, project_data
+    return segment_data, campaign_data, new_gift_data, individual_data, contact_data
 
 # Adds the campaign ID to each segment and removes ones not used since 01/01/2020
 def fix_segments(segment_data, campaign_data, gift_data):
@@ -375,11 +376,11 @@ if __name__ == "__main__":
     insert_tags()
     insert_org_groups()
     
-    segment_data, campaign_data, gift_data, individual_data, contact_data, project_data = read_virtuous_exports()
+    segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
-    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data, project_data)
+    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
     # insert_org_group_history()
     # insert_tag_history()
