@@ -12,9 +12,23 @@ HEADERS = {
 # Create the database and tables
 def create_tables():
     # delete and recreate database
-    cursor.execute("DROP DATABASE IF EXISTS VirtuousDB;")
-    cursor.execute("CREATE DATABASE IF NOT EXISTS VirtuousDB;")
+    # cursor.execute("DROP DATABASE IF EXISTS VirtuousDB;")
+    # cursor.execute("CREATE DATABASE IF NOT EXISTS VirtuousDB;")
     cursor.execute("USE VirtuousDB;")
+    drop_query = """
+        SET FOREIGN_KEY_CHECKS = 0;
+        DROP TABLE IF EXISTS contacts;
+        DROP TABLE IF EXISTS individuals;
+        DROP TABLE IF EXISTS campaigns;
+        DROP TABLE IF EXISTS communications;
+        DROP TABLE IF EXISTS segments;
+        DROP TABLE IF EXISTS gifts;
+        DROP TABLE IF EXISTS tags;
+        DROP TABLE IF EXISTS contact_tags;
+        DROP TABLE IF EXISTS org_groups;
+        DROP TABLE IF EXISTS contact_org_groups;
+        SET FOREIGN_KEY_CHECKS = 1;
+    """
 
     # read table creation commands
     try:
@@ -345,8 +359,9 @@ if __name__ == "__main__":
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
-    insert_org_group_history()
-    insert_tag_history()
+    
+    # insert_org_group_history()
+    # insert_tag_history()
 
     conn.commit()
     cursor.close()
