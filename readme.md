@@ -32,6 +32,7 @@ This project maintains a local MySQL database by automatically updating it using
 3) Download this query: [All Gifts](https://app.virtuoussoftware.com/Generosity/Query/Editor/5507)
 4) Download this query: [All Individuals](https://app.virtuoussoftware.com/Generosity/Query/Editor/5510)
 5) Download this query: [All Contacts](https://app.virtuoussoftware.com/Generosity/Query/Editor/5509)
+6) Download this query: [All Projects](https://app.virtuoussoftware.com/Generosity/Query/Editor/5557)
 6) Move downloaded files to `src/database/virtuous_exports`
 7) Open the terminal to `Virtuous-Webhook`
 8) Enter this command: `python3 src/database/create_database.py`

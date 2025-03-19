@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS communications (
   FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID)
 );
 
+CREATE TABLE IF NOT EXISTS projects (
+  ProjectID INT PRIMARY KEY NOT NULL,
+  ProjectCode VARCHAR(50) NOT NULL,
+  ProjectName VARCHAR(100) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS segments (
   SegmentID INT PRIMARY KEY NOT NULL,
   SegmentCode VARCHAR(50) NOT NULL,
@@ -47,9 +53,11 @@ CREATE TABLE IF NOT EXISTS gifts (
   ContactID INT NOT NULL,
   IndividualID INT,
   SegmentCode VARCHAR(50),
+  ProjectCode VARCHAR(50)
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID),
-  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
+  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode),
+  FOREIGN KEY (ProjectCode) REFERENCES projects (ProjectCode)
 );
 
 CREATE TABLE IF NOT EXISTS tags (
@@ -76,6 +84,14 @@ CREATE TABLE IF NOT EXISTS contact_org_groups (
   PRIMARY KEY (ContactID, OrgGroupID),
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (OrgGroupID) REFERENCES org_groups (OrgGroupID)
+);
+
+CREATE TABLE IF NOT EXISTS gift_projects (
+  GiftID INT NOT NULL,
+  ProjectID INT NOT NULL
+  PRIMARY KEY (GiftID, OrgGroupID)
+  FOREIGN KEY (GiftID) REFERENCES gifts (GiftID),
+  FOREIGN KEY (ProjectID) REFERENCES projects (ProjectID)
 );
 
 CREATE TABLE IF NOT EXISTS org_group_history (
