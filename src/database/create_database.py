@@ -221,6 +221,9 @@ def fix_segments(segment_data, campaign_data, gift_data):
 
     return new_segment_data
 
+def fix_gifts(gift_data):
+    return [line for line in gift_data if line[7] not in ("2263", "2300", "2305")]
+
 # Gets the communications for each campaign (see comments for more info)
 def get_communications(campaign_data):
     print("Pulling communications from Virtuous API")
@@ -393,6 +396,7 @@ if __name__ == "__main__":
     
     segment_data, campaign_data, gift_data, individual_data, contact_data, project_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
+    gift_data = fix_gifts(gift_data)
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data, project_data)
