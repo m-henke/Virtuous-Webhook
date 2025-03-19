@@ -379,28 +379,27 @@ def insert_tag_history():
 
 
 if __name__ == "__main__":
-    # conn = mysql.connector.connect(
-    #     host=os.getenv("LOCAL_DB_HOST_IP"),
-    #     user=os.getenv("LOCAL_DB_USER"),
-    #     password=os.getenv("LOCAL_DB_PSWD"),
-    #     database="VirtuousDB"
-    # )
-    # cursor = conn.cursor()
+    conn = mysql.connector.connect(
+        host=os.getenv("LOCAL_DB_HOST_IP"),
+        user=os.getenv("LOCAL_DB_USER"),
+        password=os.getenv("LOCAL_DB_PSWD"),
+        database="VirtuousDB"
+    )
+    cursor = conn.cursor()
 
-    # create_tables()
-    # insert_tags()
-    # insert_org_groups()
+    create_tables()
+    insert_tags()
+    insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data, project_data = read_virtuous_exports()
-    print()
-    # segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    # communication_data = get_communications(campaign_data)
-    # communication_data = fix_communications(communication_data)
-    # insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data, project_data)
+    segment_data = fix_segments(segment_data, campaign_data, gift_data)
+    communication_data = get_communications(campaign_data)
+    communication_data = fix_communications(communication_data)
+    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data, project_data)
     
     # insert_org_group_history()
     # insert_tag_history()
 
-    # conn.commit()
-    # cursor.close()
-    # conn.close()
+    conn.commit()
+    cursor.close()
+    conn.close()
