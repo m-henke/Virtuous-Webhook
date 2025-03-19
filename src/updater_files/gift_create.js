@@ -7,8 +7,21 @@ function format_date(date) {
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+async function handle_bad_project_codes(gift) {
+    const bad_codes = ["2263", "2300", "2305"];
+    for (let i = 0; i < gift.giftDesignations.length; i++) {
+        if (bad_codes.includes(gift.giftDesignations[i].projectCode)) {
+            gift.amount -= gift.giftDesignations[i].amountDesignated;
+        }
+    }
+    return gift;
+}
+
 async function gift_create(gift, pool) {
     const gift_query = "INSERT INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode) VALUES (?, ?, ?, ?, ?, ?, ?);";
+    if (gift.giftType == "Electronic Funds Transfer") {
+        gift.giftType = "EFT";
+    }
     const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode];
     await query_async(pool, gift_query, values);
 }
@@ -48,6 +61,10 @@ async function create_new_segment(gift, pool) {
 
 async function run_gift_create(data, pool) {
     try {
+        if (data.gift.contactPassthroughId != null) {
+            data.gift.contactId = data.gift.contactPassthroughId;
+        }
+        data.gift = await handle_bad_project_codes(data.gift);
         await gift_create(data.gift, pool);
         await update_contact_gift_info(data.gift, pool);
         return Promise.resolve();
@@ -71,5 +88,6 @@ module.exports = {
     run_gift_create,
     format_date,
     update_contact_gift_info,
+    handle_bad_project_codes,
     create_new_segment
 }

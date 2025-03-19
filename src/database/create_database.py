@@ -146,6 +146,18 @@ def read_virtuous_exports():
         [int(line[4])] + 
         [None if line[5] == '' else int(line[5])] +
         line[6:] for line in gift_data]
+    bad_gift_id = {line[0]: True for line in gift_data if line[9] in ("2263", "2300", "2305")}
+    used_gift_id = {}
+    new_gift_data = []
+    for gift in gift_data:
+        if gift[9] in ("2263", "2300", "2305") or used_gift_id.get(gift[0], False):
+            continue
+        if bad_gift_id.get(gift[0], False):
+            gift[1] = Decimal(gift[10])
+        if gift[11] != "":
+            gift[4] = int(gift[11])
+        new_gift_data.append(gift[:9])
+        used_gift_id[gift[0]] = True
     print("Gift data imported")
     
     # Import individual data
@@ -177,16 +189,10 @@ def read_virtuous_exports():
     ]
     print("Project data imported")
     
-    return segment_data, campaign_data, gift_data, individual_data, contact_data, project_data
+    return segment_data, campaign_data, new_gift_data, individual_data, contact_data, project_data
 
 # Adds the campaign ID to each segment and removes ones not used since 01/01/2020
 def fix_segments(segment_data, campaign_data, gift_data):
-    # Remove project info to add back later
-    gift_project_data = []
-    for line in gift_data:
-        line.pop()
-        gift_project_data.append(line.pop())
-
     # Add the campaign ID to each gift based on the campaign name
     campaign_dict = {line[1]: line[0] for line in campaign_data}
     for line in gift_data:
@@ -215,14 +221,7 @@ def fix_segments(segment_data, campaign_data, gift_data):
         for i in range(3):
             line.pop()
 
-    # Add project code back
-    for line, code in zip(gift_data, gift_project_data):
-        line.append(code)
-
     return new_segment_data
-
-def fix_gifts(gift_data):
-    return [line for line in gift_data if line[7] not in ("2263", "2300", "2305")]
 
 # Gets the communications for each campaign (see comments for more info)
 def get_communications(campaign_data):
@@ -276,7 +275,7 @@ def fix_communications(communication_data):
     return new_communication_data
 
 # Inserts the data into the database
-def insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data, project_data):
+def insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data):
     insert_contacts_query = """
     INSERT INTO contacts (ContactID, ContactName, ContactType, LastGiftAmount, LastGiftDate) 
     VALUES (%s, %s, %s, %s, %s);
@@ -301,14 +300,6 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode) 
     VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
-    insert_projects_query = """
-    INSERT INTO projects (ProjectID, ProjectCode, ProjectName)
-    VALUES (%s, %s, %s);
-    """
-    insert_gift_projects_query = """
-    INSERT INTO gift_projects (GiftID, ProjectID)
-    VALUES (%s, %s);
-    """
     insert_contact_tag_query = """
     INSERT IGNORE INTO contact_tags (ContactID, TagID)
     VALUES (%s, %s);"""
@@ -323,7 +314,6 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     tag_dict = {line[1]: line[0] for line in cursor.fetchall()}
     cursor.execute("SELECT * FROM org_groups;")
     org_group_dict = {line[1]: line[0] for line in cursor.fetchall()}
-    project_dict = {line[1]: line[0] for line in project_data}
 
     cursor.executemany(insert_contacts_query, contact_data)
     print("Contacts inserted")
@@ -333,8 +323,6 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     print("Campaigns inserted")
     cursor.executemany(insert_communications_query, communication_data)
     print("Communications inserted")
-    cursor.executemany(insert_projects_query, project_data)
-    print("Projects inserted")
     cursor.executemany(insert_segments_query, segment_data)
     print("Segments inserted")
     cursor.executemany(insert_gifts_query, gift_data)
@@ -352,14 +340,6 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
             if org_groups[i][0] != "":
                 org_group_insert = [[contact[0], org_group_dict[org_group]] for org_group in org_groups[i]]
                 cursor.executemany(insert_contact_org_group_query, org_group_insert)
-        except KeyError:
-            pass
-
-    for i, gift in enumerate(gift_data):
-        print(f"Gift Projects Inserted: {i + 1}/{len(gift_data)}", end='\r')
-        try:
-            if gift[7] != "":
-                cursor.execute(insert_gift_projects_query, [gift[0], project_dict[gift[7]]])
         except KeyError:
             pass
 
@@ -396,7 +376,6 @@ if __name__ == "__main__":
     
     segment_data, campaign_data, gift_data, individual_data, contact_data, project_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    gift_data = fix_gifts(gift_data)
     communication_data = get_communications(campaign_data)
     communication_data = fix_communications(communication_data)
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data, project_data)
