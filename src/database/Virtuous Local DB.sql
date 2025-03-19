@@ -1,4 +1,4 @@
-CREATE TABLE contacts (
+CREATE TABLE IF NOT EXISTS contacts (
   ContactID INT PRIMARY KEY NOT NULL,
   ContactName VARCHAR(255) NOT NULL,
   ContactType VARCHAR(25) NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE contacts (
   LastGiftDate DATE
 );
 
-CREATE TABLE individuals (
+CREATE TABLE IF NOT EXISTS individuals (
   IndividualID INT PRIMARY KEY NOT NULL,
   ContactID INT NOT NULL,
   FirstName VARCHAR(100) NOT NULL,
@@ -16,12 +16,12 @@ CREATE TABLE individuals (
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID) ON DELETE CASCADE
 );
 
-CREATE TABLE campaigns (
+CREATE TABLE IF NOT EXISTS campaigns (
   CampaignID INT PRIMARY KEY NOT NULL,
   CampaignName VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE communications (
+CREATE TABLE IF NOT EXISTS communications (
   CommunicationID INT PRIMARY KEY NOT NULL,
   CommunicationName VARCHAR(100) NOT NULL,
   ChannelType VARCHAR(100) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE communications (
   FOREIGN KEY (CampaignID) REFERENCES campaigns (CampaignID)
 );
 
-CREATE TABLE segments (
+CREATE TABLE IF NOT EXISTS segments (
   SegmentID INT PRIMARY KEY NOT NULL,
   SegmentCode VARCHAR(50) NOT NULL,
   SegmentName VARCHAR(100) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE segments (
 
 CREATE INDEX idx_segment_code ON segments (SegmentCode);
 
-CREATE TABLE gifts (
+CREATE TABLE IF NOT EXISTS gifts (
   GiftID INT PRIMARY KEY NOT NULL,
   Amount DECIMAL(10, 2) NOT NULL,
   GiftType VARCHAR(50) NOT NULL,
@@ -52,12 +52,12 @@ CREATE TABLE gifts (
   FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
 );
 
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
   TagID INT PRIMARY KEY NOT NULL,
   TagName VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE contact_tags (
+CREATE TABLE IF NOT EXISTS contact_tags (
   ContactID INT NOT NULL,
   TagID INT NOT NULL,
   PRIMARY KEY (ContactID, TagID),
@@ -65,12 +65,12 @@ CREATE TABLE contact_tags (
   FOREIGN KEY (TagID) REFERENCES tags (TagID)
 );
 
-CREATE TABLE org_groups (
+CREATE TABLE IF NOT EXISTS org_groups (
   OrgGroupID INT PRIMARY KEY NOT NULL,
   OrgGroupName VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE contact_org_groups (
+CREATE TABLE IF NOT EXISTS contact_org_groups (
   ContactID INT NOT NULL,
   OrgGroupID INT NOT NULL,
   PRIMARY KEY (ContactID, OrgGroupID),
@@ -78,7 +78,7 @@ CREATE TABLE contact_org_groups (
   FOREIGN KEY (OrgGroupID) REFERENCES org_groups (OrgGroupID)
 );
 
-CREATE TABLE org_group_history (
+CREATE TABLE IF NOT EXISTS org_group_history (
   ID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   ContactID INT NOT NULL,
   OrgGroupID INT NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE org_group_history (
   DateRemoved DATE
 );
 
-CREATE TABLE tag_history (
+CREATE TABLE IF NOT EXISTS tag_history (
   ID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
   ContactID INT NOT NULL,
   TagID INT NOT NULL,
