@@ -29,6 +29,7 @@ def create_tables():
         DROP TABLE IF EXISTS contact_org_groups;
         SET FOREIGN_KEY_CHECKS = 1;
     """
+    cursor.execute(drop_query)
 
     # read table creation commands
     try:
