@@ -1,5 +1,5 @@
 import mysql.connector
-import requests, os
+import requests, os, time
 from decimal import Decimal
 from datetime import datetime
 
@@ -9,27 +9,42 @@ HEADERS = {
     'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'
 }
 
+def create_database_connection():
+    conn = mysql.connector.connect(
+        host=os.getenv("LOCAL_DB_HOST_IP"),
+        user=os.getenv("LOCAL_DB_USER"),
+        password=os.getenv("LOCAL_DB_PSWD"),
+        database="VirtuousDB"
+    )
+    cursor = conn.cursor()
+    return conn, cursor
+
 # Create the database and tables
 def create_tables():
     # delete and recreate database
     # cursor.execute("DROP DATABASE IF EXISTS VirtuousDB;")
     # cursor.execute("CREATE DATABASE IF NOT EXISTS VirtuousDB;")
-    cursor.execute("USE VirtuousDB;")
+    global conn, cursor
     drop_query = """
-        SET FOREIGN_KEY_CHECKS = 0;
-        DROP TABLE IF EXISTS contacts;
-        DROP TABLE IF EXISTS individuals;
-        DROP TABLE IF EXISTS campaigns;
-        DROP TABLE IF EXISTS communications;
-        DROP TABLE IF EXISTS segments;
-        DROP TABLE IF EXISTS gifts;
-        DROP TABLE IF EXISTS tags;
-        DROP TABLE IF EXISTS contact_tags;
-        DROP TABLE IF EXISTS org_groups;
         DROP TABLE IF EXISTS contact_org_groups;
-        SET FOREIGN_KEY_CHECKS = 1;
+        DROP TABLE IF EXISTS org_groups;
+        DROP TABLE IF EXISTS contact_tags;
+        DROP TABLE IF EXISTS tags;
+        DROP TABLE IF EXISTS gifts;
+        DROP INDEX idx_segment_code ON segments;
+        DROP TABLE IF EXISTS segments;
+        DROP TABLE IF EXISTS communications;
+        DROP TABLE IF EXISTS campaigns;
+        DROP TABLE IF EXISTS individuals;
+        DROP TABLE IF EXISTS contacts;
     """
     cursor.execute(drop_query)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    time.sleep(5)
+
+    conn, cursor = create_database_connection()
 
     # read table creation commands
     try:
@@ -364,13 +379,7 @@ def insert_tag_history():
 
 
 if __name__ == "__main__":
-    conn = mysql.connector.connect(
-        host=os.getenv("LOCAL_DB_HOST_IP"),
-        user=os.getenv("LOCAL_DB_USER"),
-        password=os.getenv("LOCAL_DB_PSWD"),
-        database="VirtuousDB"
-    )
-    cursor = conn.cursor()
+    conn, cursor = create_database_connection()
 
     create_tables()
     insert_tags()

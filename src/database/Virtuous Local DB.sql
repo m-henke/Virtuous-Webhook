@@ -47,11 +47,9 @@ CREATE TABLE IF NOT EXISTS gifts (
   ContactID INT NOT NULL,
   IndividualID INT,
   SegmentCode VARCHAR(50),
-  ProjectCode VARCHAR(50)
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID),
-  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode),
-  FOREIGN KEY (ProjectCode) REFERENCES projects (ProjectCode)
+  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
 );
 
 CREATE TABLE IF NOT EXISTS tags (
