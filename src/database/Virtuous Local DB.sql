@@ -93,3 +93,12 @@ CREATE TABLE IF NOT EXISTS tag_history (
   DateAdded DATE NOT NULL,
   DateRemoved DATE
 );
+
+CREATE TABLE IF NOT EXISTS newsletter_costs (
+  ID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  NewsletterYear INT NOT NULL,
+  Season VARCHAR(6),
+  Cost DECIMAL(10, 2) NOT NULL,
+  Goal DECIMAL(10, 2) NOT NULL,
+  ContactsMailed INT NOT NULL
+);
