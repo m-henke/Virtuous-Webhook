@@ -345,20 +345,16 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     cursor.executemany(insert_gifts_query, gift_data)
     print("Gifts inserted")
 
+    tag_insert = []
+    org_group_insert = []
     for i, contact in enumerate(contact_data):
         print(f"Tags/OrgGroups Inserted: {i + 1}/{len(contact_data)}", end="\r")
-        try:
-            if tags[i][0] != "":
-                tag_insert = [[contact[0], tag_dict[tag]] for tag in tags[i]]
-                cursor.executemany(insert_contact_tag_query, tag_insert)
-        except KeyError:
-            pass
-        try:
-            if org_groups[i][0] != "":
-                org_group_insert = [[contact[0], org_group_dict[org_group]] for org_group in org_groups[i]]
-                cursor.executemany(insert_contact_org_group_query, org_group_insert)
-        except KeyError:
-            pass
+        if tags[i][0] != "":
+            tag_insert += [[contact[0], tag_dict[tag]] for tag in tags[i] if tag_dict.get(tag, False) != False] 
+        if org_groups[i][0] != "":
+            org_group_insert += [[contact[0], org_group_dict[org_group]] for org_group in org_groups[i] if org_group_dict.get(org_group, False) != False]
+    cursor.executemany(insert_contact_tag_query, tag_insert)
+    cursor.executemany(insert_contact_org_group_query, org_group_insert)
 
     print("\nTags and org groups inserted")
     print("Database created")
