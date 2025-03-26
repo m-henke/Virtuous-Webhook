@@ -153,16 +153,16 @@ def read_virtuous_exports():
     print("Campaign data imported")
 
     # Fix All Gifts file
-    with open("src/database/virtuous_exports/All Gifts.csv", 'r') as f:
+    with open("src/database/virtuous_exports/All Gifts (4).csv", 'r') as f:
         data = [line.strip('\n') for line in f.readlines()]
     for i, line in enumerate(data):
         if line[-1] == ',' and i > 0:
             data[i] += '""'
-    with open("src/database/virtuous_exports/All Gifts.csv", 'w') as f:
+    with open("src/database/virtuous_exports/All Gifts (4).csv", 'w') as f:
         f.write('\n'.join(data))
     
     # Import gift data
-    gift_data = get_csv_file("All Gifts.csv")
+    gift_data = get_csv_file("All Gifts (4).csv")
     gift_data = [
         [int(line[0])] + 
         [Decimal(line[1])] + 
@@ -178,10 +178,10 @@ def read_virtuous_exports():
         if gift[9] in ("2263", "2300", "2305") or used_gift_id.get(gift[0], False):
             continue
         if bad_gift_id.get(gift[0], False):
-            gift[1] = Decimal(gift[11])
+            gift[1] = Decimal(gift[-1])
         if gift[10] != "":
             gift[4] = int(gift[10])
-        new_gift_data.append(gift[:9])
+        new_gift_data.append(gift[:9] + [gift[11]])
         used_gift_id[gift[0]] = True
     print("Gift data imported")
     
@@ -222,7 +222,7 @@ def fix_segments(segment_data, campaign_data, gift_data):
     for gift in gift_data:
         if gift_segment_dict.get(gift[6], False) == False:
             unique_gift_segments.append(gift)
-            gift_segment_dict[gift[6]] = gift[9]
+            gift_segment_dict[gift[6]] = gift[-1]
     
     # Add campaign ID to segment data
     # If a segment doesn't match a gift from the last 5 years it is skipped
@@ -235,8 +235,8 @@ def fix_segments(segment_data, campaign_data, gift_data):
 
     # Undo changes to gift data
     for line in gift_data:
-        for i in range(2):
-            line.pop()
+        line.pop()
+        line.pop(8)
 
     return new_segment_data
 
@@ -314,8 +314,8 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     VALUES (%s, %s, %s, %s);
     """
     insert_gifts_query = """
-    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName) 
-    VALUES (%s, %s, %s, %s, %s, %s, %s);
+    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
     insert_contact_tag_query = """
     INSERT IGNORE INTO contact_tags (ContactID, TagID)
@@ -375,21 +375,22 @@ def insert_tag_history():
 
 
 if __name__ == "__main__":
-    conn, cursor = create_database_connection()
+    # conn, cursor = create_database_connection()
 
-    create_tables()
-    insert_tags()
-    insert_org_groups()
+    # create_tables()
+    # insert_tags()
+    # insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    communication_data = get_communications(campaign_data)
-    communication_data = fix_communications(communication_data)
-    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
+    print()
+    # communication_data = get_communications(campaign_data)
+    # communication_data = fix_communications(communication_data)
+    # insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
     # insert_org_group_history()
     # insert_tag_history()
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+    # conn.commit()
+    # cursor.close()
+    # conn.close()
