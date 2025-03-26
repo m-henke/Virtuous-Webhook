@@ -3,11 +3,23 @@ const { update_contact_last_gift } = require('./gift_delete');
 const { query_async } = require('./contact_create');
 
 async function gift_update(gift, pool) {
-    const gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, SegmentCode = ? WHERE GiftID = ?;";
+    const response = await query_async(pool, "SELECT SegmentCode FROM gifts WHERE GiftID = ?;", [gift.id]);
+    var gift_query = null;
     if (gift.giftType == "Electronic Funds Transfer") {
         gift.giftType = "EFT";
     }
-    const values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.segmentCode, gift.id];
+    if (response[0].SegmentCode == gift.segmentCode) {
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ? WHERE GiftID = ?;";
+        const values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.id];
+    } else {
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, SegmentCode = ?, CommunicationName = ? WHERE GiftID = ?;";
+        const seg_response = await axios.get(`https://api.virtuoussoftware.com/api/Segment/Code/${gift.segmentCode}`, 
+            {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
+        if (seg_response.status != 200) {
+            throw new Error(seg_response.statusText);
+        }
+        const values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.segmentCode, seg_response.data.communicationName, gift.id];
+    }
     await query_async(pool, gift_query, values);
 }
 

@@ -22,7 +22,15 @@ async function gift_create(gift, pool) {
     if (gift.giftType == "Electronic Funds Transfer") {
         gift.giftType = "EFT";
     }
-    const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode];
+
+    const seg_response = await axios.get(`https://api.virtuoussoftware.com/api/Segment/Code/${gift.segmentCode}`, 
+        {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
+
+    if (seg_response.status != 200) {
+        throw new Error(seg_response.statusText);
+    }
+
+    const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode, seg_response.data.communicationName];
     await query_async(pool, gift_query, values);
 }
 
@@ -37,7 +45,7 @@ async function create_new_segment(gift, pool) {
         {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
     
     if (seg_response.status != 200) {
-        throw new Error(response.statusText);
+        throw new Error(seg_response.statusText);
     }
 
     const com_response = await axios.get(`https://api.virtuoussoftware.com/api/Communication/${seg_response.data.communicationId}`, 

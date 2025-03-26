@@ -235,7 +235,7 @@ def fix_segments(segment_data, campaign_data, gift_data):
 
     # Undo changes to gift data
     for line in gift_data:
-        for i in range(3):
+        for i in range(2):
             line.pop()
 
     return new_segment_data
@@ -314,7 +314,7 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     VALUES (%s, %s, %s, %s);
     """
     insert_gifts_query = """
-    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode) 
+    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName) 
     VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
     insert_contact_tag_query = """
