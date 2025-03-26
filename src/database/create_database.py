@@ -153,16 +153,16 @@ def read_virtuous_exports():
     print("Campaign data imported")
 
     # Fix All Gifts file
-    with open("src/database/virtuous_exports/All Gifts (4).csv", 'r') as f:
+    with open("src/database/virtuous_exports/All Gifts.csv", 'r') as f:
         data = [line.strip('\n') for line in f.readlines()]
     for i, line in enumerate(data):
         if line[-1] == ',' and i > 0:
             data[i] += '""'
-    with open("src/database/virtuous_exports/All Gifts (4).csv", 'w') as f:
+    with open("src/database/virtuous_exports/All Gifts.csv", 'w') as f:
         f.write('\n'.join(data))
     
     # Import gift data
-    gift_data = get_csv_file("All Gifts (4).csv")
+    gift_data = get_csv_file("All Gifts.csv")
     gift_data = [
         [int(line[0])] + 
         [Decimal(line[1])] + 
@@ -375,22 +375,21 @@ def insert_tag_history():
 
 
 if __name__ == "__main__":
-    # conn, cursor = create_database_connection()
+    conn, cursor = create_database_connection()
 
-    # create_tables()
-    # insert_tags()
-    # insert_org_groups()
+    create_tables()
+    insert_tags()
+    insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    print()
-    # communication_data = get_communications(campaign_data)
-    # communication_data = fix_communications(communication_data)
-    # insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
+    communication_data = get_communications(campaign_data)
+    communication_data = fix_communications(communication_data)
+    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    # insert_org_group_history()
-    # insert_tag_history()
+    insert_org_group_history()
+    insert_tag_history()
 
-    # conn.commit()
-    # cursor.close()
-    # conn.close()
+    conn.commit()
+    cursor.close()
+    conn.close()
