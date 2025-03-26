@@ -51,8 +51,7 @@ CREATE TABLE IF NOT EXISTS gifts (
   ReceiptStatus VARCHAR(25),
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID),
-  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode),
-  FOREIGN KEY (CommunicationName) REFERENCES communications (CommunicationName)
+  FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
 );
 
 CREATE TABLE IF NOT EXISTS tags (

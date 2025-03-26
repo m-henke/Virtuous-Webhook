@@ -347,8 +347,8 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
 
     tag_insert = []
     org_group_insert = []
+    print("Grouping tags and org groups")
     for i, contact in enumerate(contact_data):
-        print(f"Tags/OrgGroups Inserted: {i + 1}/{len(contact_data)}", end="\r")
         if tags[i][0] != "":
             tag_insert += [[contact[0], tag_dict[tag]] for tag in tags[i] if tag_dict.get(tag, False) != False] 
         if org_groups[i][0] != "":
@@ -387,8 +387,8 @@ if __name__ == "__main__":
     communication_data = fix_communications(communication_data)
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    insert_org_group_history()
-    insert_tag_history()
+    # insert_org_group_history()
+    # insert_tag_history()
 
     conn.commit()
     cursor.close()
