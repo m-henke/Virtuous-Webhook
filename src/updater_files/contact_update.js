@@ -2,6 +2,9 @@ const { tag_create, org_group_create, get_todays_date, format_phone_number, quer
 
 async function contact_update(contact, pool) {
     const query = "UPDATE contacts SET ContactName = ?, ContactType = ? WHERE ContactID = ?;";
+    if (contact.customContactType != null) {
+        contact.contactType = contact.customContactType;
+    }
     await query_async(pool, query, [contact.name, contact.contactType, contact.id]);
 }
 
