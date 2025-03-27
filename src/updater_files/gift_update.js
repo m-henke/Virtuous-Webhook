@@ -10,7 +10,7 @@ async function gift_update(gift, pool) {
         gift.giftType = "EFT";
     }
     if (response[0].SegmentCode == gift.segmentCode) {
-        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, WHERE GiftID = ?;";
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ? WHERE GiftID = ?;";
         values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.id];
     } else {
         gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, SegmentCode = ?, CommunicationName = ? WHERE GiftID = ?;";
