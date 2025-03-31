@@ -29,7 +29,12 @@ async function run_gift_update(data, pool) {
         if (data.gift.contactPassthroughId != null) {
             data.gift.contactId = data.gift.contactPassthroughId;
         }
-        data.gift = await handle_bad_project_codes(data.gift)
+        data.gift = await handle_bad_project_codes(data.gift);
+        // If the gift update was for a bad code return promise resolved
+        // This is to prevent an error when it tires to update a gift that does not exist
+        if (data.gift.amount == 0) {
+            return Promise.resolve();
+        }
         await gift_update(data.gift, pool);
         await update_contact_last_gift(data.gift, pool);
         return Promise.resolve();
