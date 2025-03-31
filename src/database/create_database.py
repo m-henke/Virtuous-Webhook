@@ -37,6 +37,8 @@ def create_tables():
         DROP TABLE IF EXISTS campaigns;
         DROP TABLE IF EXISTS individuals;
         DROP TABLE IF EXISTS contacts;
+        DROP TABLE IF EXISTS tag_history;
+        DROP TABLE IF EXISTS org_group_history;
     """
     cursor.execute(drop_query)
     conn.commit()
@@ -387,8 +389,8 @@ if __name__ == "__main__":
     communication_data = fix_communications(communication_data)
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    # insert_org_group_history()
-    # insert_tag_history()
+    insert_org_group_history()
+    insert_tag_history()
 
     conn.commit()
     cursor.close()
