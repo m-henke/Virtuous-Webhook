@@ -72,6 +72,9 @@ async function run_gift_create(data, pool) {
         if (data.gift.contactPassthroughId != null) {
             data.gift.contactId = data.gift.contactPassthroughId;
         }
+        if (data.gift.segmentCode == null) {
+            data.gift.segmentCode = "F2FY23ONB";
+        }
         data.gift = await handle_bad_project_codes(data.gift);
         await gift_create(data.gift, pool);
         await update_contact_gift_info(data.gift, pool);
