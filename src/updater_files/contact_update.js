@@ -31,22 +31,19 @@ async function tag_update(tags, contactID, pool) {
     const get_tags_query = "SELECT ct.TagID, t.TagName FROM contact_tags ct JOIN tags t ON ct.TagID = t.TagID WHERE ct.ContactID = ?;";
     const response = await query_async(pool, get_tags_query, [contactID]);
     
+    const existingTags = new Set(response.map(resp => resp.TagName));
+    const newTags = new Set(tags);
+
     // Add new tags
-    var tag_data = {};
-    for (let tag of tags) {
-        for (let resp of response) {
-            if (tag == resp.TagName) {
-                tag_data[tag] = true;
-            }
-        }
-        if (!tag_data[tag]) {
+    for (let tag of newTags) {
+        if (!existingTags.has(tag)) {
             await tag_create(tag, contactID, pool);
         }
     }
 
     // Remove old tags from database
     for (let resp of response) {
-        if (!tag_data[resp.TagName]) {
+        if (!newTags.has(resp.TagName)) {
             const tag_history_query = "UPDATE tag_history SET DateRemoved = ? WHERE ContactID = ? and TagID = ?;";
             await query_async(pool, tag_history_query, [get_todays_date(), contactID, resp.TagID]);
 
@@ -60,25 +57,22 @@ async function org_group_update(org_groups, contactID, pool) {
     const get_orgs_query = "SELECT co.OrgGroupID, o.OrgGroupName FROM contact_org_groups co JOIN org_groups o ON co.OrgGroupID = o.OrgGroupID WHERE co.ContactID = ?;";
     const response = await query_async(pool, get_orgs_query, [contactID]);
 
+    const existingOrgGroups = new Set(response.map(resp => resp.OrgGroupName));
+    const newOrgGroups = new Set(org_groups);
+
     // Add new org groups
-    var org_data = {};
-    for (let org of org_groups) {
-        for (let resp of response) {
-            if (org == resp.OrgGroupName) {
-                org_data[org] = true;
-            }
-        }
-        if (!org_data[org]) {
+    for (let org of newOrgGroups) {
+        if (!existingOrgGroups.has(org)) {
             await org_group_create(org, contactID, pool);
         }
     }
 
     // Remove old org groups
     for (let resp of response) {
-        if (!org_data[resp.OrgGroupName]) {
+        if (!newOrgGroups.has(resp.OrgGroupName)) {
             const org_history_query = "UPDATE org_group_history SET DateRemoved = ? WHERE ContactID = ? and OrgGroupID = ?;";
             await query_async(pool, org_history_query, [get_todays_date(), contactID, resp.OrgGroupID]);
-            
+
             const contact_org_query = "DELETE FROM contact_org_groups WHERE ContactID = ? and OrgGroupID = ?;";
             await query_async(pool, contact_org_query, [contactID, resp.OrgGroupID]);
         }
