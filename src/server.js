@@ -31,48 +31,68 @@ server.post("/receive-webhook", async (req, res) => {
     try {
         switch (data.event) {
             case "ContactCreate":
-                for (let request of data.models) {
-                    try {
-                        await run_contact_create(request, pool);
-                    } catch (err) {
-                        errors.push(err);
+                try {
+                    for (let request of data.models) {
+                        try {
+                            await run_contact_create(request, pool);
+                        } catch (err) {
+                            errors.push(err);
+                        }
                     }
+                } catch {
+                    await run_contact_create(data, pool);
                 }
                 break;
             case "ContactUpdate":
-                for (let request of data.models) {
-                    try {
-                        await run_contact_update(request, pool);
-                    } catch (err) {
-                        errors.push(err);
+                try {
+                    for (let request of data.models) {
+                        try {
+                            await run_contact_update(request, pool);
+                        } catch (err) {
+                            errors.push(err);
+                        }
                     }
+                } catch {
+                    await run_contact_update(data, pool);
                 }
                 break;
             case "GiftCreate":
-                for (let request of data.models) {
-                    try {
-                        await run_gift_create(request, pool);
-                    } catch (err) {
-                        errors.push(err);
+                try {
+                    for (let request of data.models) {
+                        try {
+                            await run_gift_create(request, pool);
+                        } catch (err) {
+                            errors.push(err);
+                        }
                     }
+                } catch {
+                    await run_contact_create(data, pool);
                 }
                 break;
             case "GiftUpdate":
-                for (let request of data.models) {
-                    try {
-                        await run_gift_update(request, pool);
-                    } catch (err) {
-                        errors.push(err);
+                try {
+                    for (let request of data.models) {
+                        try {
+                            await run_gift_update(request, pool);
+                        } catch (err) {
+                            errors.push(err);
+                        }
                     }
+                } catch {
+                    run_gift_update(data, pool);
                 }
                 break;
             case "GiftDelete":
-                for (let request of data.models) {
-                    try {
-                        await run_gift_delete(request, pool);
-                    } catch (err) {
-                        errors.push(err);
+                try {
+                    for (let request of data.models) {
+                        try {
+                            await run_gift_delete(request, pool);
+                        } catch (err) {
+                            errors.push(err);
+                        }
                     }
+                } catch {
+                    await run_gift_delete(data, pool);
                 }
                 break;
             default:
