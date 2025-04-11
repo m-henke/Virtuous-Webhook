@@ -26,7 +26,11 @@ const pool = mysql.createPool({
 // Recieves and routes data posted to the server
 server.post("/receive-webhook", async (req, res) => {
     const data = req.body;
-    console.log(`Webhook Received: ${data.event} with ${data.models.length} requests`)
+    try {
+        console.log(`Webhook Received: ${data.event} with ${data.models.length} requests`)
+    } catch {
+        console.log(`Webhook Received: ${data.event}`);
+    }
     let errors = [];
     try {
         switch (data.event) {
