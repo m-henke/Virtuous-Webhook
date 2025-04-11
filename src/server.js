@@ -31,7 +31,7 @@ server.post("/receive-webhook", async (req, res) => {
     try {
         switch (data.event) {
             case "ContactCreate":
-                for (let request in data.models) {
+                for (let request of data.models) {
                     try {
                         await run_contact_create(request, pool);
                     } catch (err) {
@@ -40,7 +40,7 @@ server.post("/receive-webhook", async (req, res) => {
                 }
                 break;
             case "ContactUpdate":
-                for (let request in data.models) {
+                for (let request of data.models) {
                     try {
                         await run_contact_update(request, pool);
                     } catch (err) {
@@ -49,7 +49,7 @@ server.post("/receive-webhook", async (req, res) => {
                 }
                 break;
             case "GiftCreate":
-                for (let request in data.models) {
+                for (let request of data.models) {
                     try {
                         await run_gift_create(request, pool);
                     } catch (err) {
@@ -58,7 +58,7 @@ server.post("/receive-webhook", async (req, res) => {
                 }
                 break;
             case "GiftUpdate":
-                for (let request in data.models) {
+                for (let request of data.models) {
                     try {
                         await run_gift_update(request, pool);
                     } catch (err) {
@@ -67,7 +67,7 @@ server.post("/receive-webhook", async (req, res) => {
                 }
                 break;
             case "GiftDelete":
-                for (let request in data.models) {
+                for (let request of data.models) {
                     try {
                         await run_gift_delete(request, pool);
                     } catch (err) {
@@ -79,10 +79,11 @@ server.post("/receive-webhook", async (req, res) => {
                 throw new Error(`Unsupported ${data.event} event`);
         }
         if (errors.length > 0) {
-            for (let error in errors) {
+            for (let error of errors) {
                 notify_teams(error, data.event);
             }
             res.status(500).send("failure");
+            return;
         }
         res.status(200).send("success");
     } catch (err) {
