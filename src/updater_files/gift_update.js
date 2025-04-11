@@ -1,6 +1,7 @@
 const { format_date, create_new_segment, handle_bad_project_codes } = require('./gift_create');
 const { update_contact_last_gift } = require('./gift_delete');
 const { query_async } = require('./contact_create');
+const axios = require('axios');
 
 async function gift_update(gift, pool) {
     const response = await query_async(pool, "SELECT SegmentCode FROM gifts WHERE GiftID = ?;", [gift.id]);
