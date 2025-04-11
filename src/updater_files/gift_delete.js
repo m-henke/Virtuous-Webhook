@@ -29,7 +29,7 @@ async function delete_gift(gift, pool) {
 
 async function run_gift_delete(data, pool) {
     try {
-        await delete_gift(data.gift, pool);
+        await delete_gift(data, pool);
         await update_contact_last_gift(data.gift, pool);
         return Promise.resolve();
     } catch (err) {
