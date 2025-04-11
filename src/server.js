@@ -33,7 +33,7 @@ server.post("/receive-webhook", async (req, res) => {
                 for (let request in data.models) {
                     try {
                         await run_contact_create(request, pool);
-                    } catch {
+                    } catch (err) {
                         notify_teams(err, data.event);
                     }
                 }
@@ -42,7 +42,7 @@ server.post("/receive-webhook", async (req, res) => {
                 for (let request in data.models) {
                     try {
                         await run_contact_update(request, pool);
-                    } catch {
+                    } catch (err) {
                         notify_teams(err, data.event);
                     }
                 }
@@ -51,7 +51,7 @@ server.post("/receive-webhook", async (req, res) => {
                 for (let request in data.models) {
                     try {
                         await run_gift_create(request, pool);
-                    } catch {
+                    } catch (err) {
                         notify_teams(err, data.event);
                     }
                 }
@@ -60,7 +60,7 @@ server.post("/receive-webhook", async (req, res) => {
                 for (let request in data.models) {
                     try {
                         await run_gift_update(request, pool);
-                    } catch {
+                    } catch (err) {
                         notify_teams(err, data.event);
                     }
                 }
@@ -69,7 +69,7 @@ server.post("/receive-webhook", async (req, res) => {
                 for (let request in data.models) {
                     try {
                         await run_gift_delete(request, pool);
-                    } catch {
+                    } catch (err) {
                         notify_teams(err, data.event);
                     }
                 }
