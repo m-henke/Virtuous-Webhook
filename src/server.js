@@ -26,23 +26,53 @@ const pool = mysql.createPool({
 // Recieves and routes data posted to the server
 server.post("/receive-webhook", async (req, res) => {
     const data = req.body;
-    console.log(`Webhook Received: ${data.event}`)
+    console.log(`Webhook Received: ${data.event} with ${data.models.length} requests`)
     try {
         switch (data.event) {
             case "ContactCreate":
-                await run_contact_create(data, pool);
+                for (let request in data.models) {
+                    try {
+                        await run_contact_create(request, pool);
+                    } catch {
+                        notify_teams(err, data.event);
+                    }
+                }
                 break;
             case "ContactUpdate":
-                await run_contact_update(data, pool);
+                for (let request in data.models) {
+                    try {
+                        await run_contact_update(request, pool);
+                    } catch {
+                        notify_teams(err, data.event);
+                    }
+                }
                 break;
             case "GiftCreate":
-                await run_gift_create(data, pool);
+                for (let request in data.models) {
+                    try {
+                        await run_gift_create(request, pool);
+                    } catch {
+                        notify_teams(err, data.event);
+                    }
+                }
                 break;
             case "GiftUpdate":
-                await run_gift_update(data, pool);
+                for (let request in data.models) {
+                    try {
+                        await run_gift_update(request, pool);
+                    } catch {
+                        notify_teams(err, data.event);
+                    }
+                }
                 break;
             case "GiftDelete":
-                await run_gift_delete(data, pool);
+                for (let request in data.models) {
+                    try {
+                        await run_gift_delete(request, pool);
+                    } catch {
+                        notify_teams(err, data.event);
+                    }
+                }
                 break;
             default:
                 throw new Error(`Unsupported ${data.event} event`);
