@@ -70,7 +70,7 @@ server.post("/receive-webhook", async (req, res) => {
                         }
                     }
                 } catch {
-                    await run_contact_create(data, pool);
+                    await run_gift_create(data, pool);
                 }
                 break;
             case "GiftUpdate":
