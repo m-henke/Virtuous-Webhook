@@ -68,14 +68,15 @@ async function create_new_segment(gift, pool) {
 }
 
 async function run_gift_create(data, pool) {
+    data.gift.contactId = data.gift.contactPassthroughId || data.gift.contactId;
+    data.gift.segmentCode = data.gift.segmentCode || "F2FY23ONB";
     try {
-        if (data.gift.contactPassthroughId != null) {
-            data.gift.contactId = data.gift.contactPassthroughId;
-        }
-        if (data.gift.segmentCode == null) {
-            data.gift.segmentCode = "F2FY23ONB";
-        }
         data.gift = await handle_bad_project_codes(data.gift);
+        // If the gift create was for a bad code return promise resolved
+        // This is to prevent an error when it tires to create a gift that doesn't need to be in the system
+        if (data.gift.amount == 0) {
+            return Promise.resolve();
+        }
         await gift_create(data.gift, pool);
         await update_contact_gift_info(data.gift, pool);
         return Promise.resolve();
