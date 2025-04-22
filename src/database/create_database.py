@@ -20,26 +20,39 @@ def create_database_connection():
     return conn, cursor
 
 # Create the database and tables
-def create_tables():
+def create_tables(keep_history_tables: bool):
     # delete and recreate database
-    # cursor.execute("DROP DATABASE IF EXISTS VirtuousDB;")
-    # cursor.execute("CREATE DATABASE IF NOT EXISTS VirtuousDB;")
     global conn, cursor
-    drop_query = """
-        DROP TABLE IF EXISTS contact_org_groups;
-        DROP TABLE IF EXISTS org_groups;
-        DROP TABLE IF EXISTS contact_tags;
-        DROP TABLE IF EXISTS tags;
-        DROP TABLE IF EXISTS gifts;
-        DROP INDEX idx_segment_code ON segments;
-        DROP TABLE IF EXISTS segments;
-        DROP TABLE IF EXISTS communications;
-        DROP TABLE IF EXISTS campaigns;
-        DROP TABLE IF EXISTS individuals;
-        DROP TABLE IF EXISTS contacts;
-        DROP TABLE IF EXISTS tag_history;
-        DROP TABLE IF EXISTS org_group_history;
-    """
+    if keep_history_tables:
+        drop_query = """
+            DROP TABLE IF EXISTS contact_org_groups;
+            DROP TABLE IF EXISTS org_groups;
+            DROP TABLE IF EXISTS contact_tags;
+            DROP TABLE IF EXISTS tags;
+            DROP TABLE IF EXISTS gifts;
+            DROP INDEX idx_segment_code ON segments;
+            DROP TABLE IF EXISTS segments;
+            DROP TABLE IF EXISTS communications;
+            DROP TABLE IF EXISTS campaigns;
+            DROP TABLE IF EXISTS individuals;
+            DROP TABLE IF EXISTS contacts;
+        """
+    else:
+        drop_query = """
+            DROP TABLE IF EXISTS contact_org_groups;
+            DROP TABLE IF EXISTS org_groups;
+            DROP TABLE IF EXISTS contact_tags;
+            DROP TABLE IF EXISTS tags;
+            DROP TABLE IF EXISTS gifts;
+            DROP INDEX idx_segment_code ON segments;
+            DROP TABLE IF EXISTS segments;
+            DROP TABLE IF EXISTS communications;
+            DROP TABLE IF EXISTS campaigns;
+            DROP TABLE IF EXISTS individuals;
+            DROP TABLE IF EXISTS contacts;
+            DROP TABLE IF EXISTS tag_history;
+            DROP TABLE IF EXISTS org_group_history;
+        """
     cursor.execute(drop_query)
     conn.commit()
     cursor.close()
@@ -377,21 +390,23 @@ def insert_tag_history():
 
 
 if __name__ == "__main__":
-    # conn, cursor = create_database_connection()
+    conn, cursor = create_database_connection()
 
-    # create_tables()
-    # insert_tags()
-    # insert_org_groups()
+    keep_history_tables = True
+    create_tables(keep_history_tables)
+    insert_tags()
+    insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    # communication_data = get_communications(campaign_data)
-    # communication_data = fix_communications(communication_data)
-    # insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
+    communication_data = get_communications(campaign_data)
+    communication_data = fix_communications(communication_data)
+    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    # insert_org_group_history()
-    # insert_tag_history()
+    if not keep_history_tables:
+        insert_org_group_history()
+        insert_tag_history()
 
-    # conn.commit()
-    # cursor.close()
-    # conn.close()
+    conn.commit()
+    cursor.close()
+    conn.close()
