@@ -173,17 +173,17 @@ def read_virtuous_exports():
         [int(line[4])] + 
         [None if line[5] == '' else int(line[5])] +
         line[6:] for line in gift_data]
-    bad_gift_id = {line[0]: True for line in gift_data if line[9] in ("2263", "2300", "2305")}
+    bad_gift_id = {line[0]: True for line in gift_data if line[9] in ("2263", "2300", "2305", "4002")}
     used_gift_id = {}
     new_gift_data = []
     for gift in gift_data:
-        if gift[9] in ("2263", "2300", "2305") or used_gift_id.get(gift[0], False):
+        if gift[9] in ("2263", "2300", "2305", "4002") or used_gift_id.get(gift[0], False):
             continue
         if bad_gift_id.get(gift[0], False):
             gift[1] = Decimal(gift[-1])
         if gift[10] != "":
             gift[4] = int(gift[10])
-        new_gift_data.append(gift[:9] + [gift[11]])
+        new_gift_data.append(gift[:9] + [gift[11]] + [gift[12]])
         used_gift_id[gift[0]] = True
     print("Gift data imported")
     
@@ -316,8 +316,8 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     VALUES (%s, %s, %s, %s);
     """
     insert_gifts_query = """
-    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus) 
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus, UTMCampaign) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
     insert_contact_tag_query = """
     INSERT IGNORE INTO contact_tags (ContactID, TagID)
@@ -377,21 +377,21 @@ def insert_tag_history():
 
 
 if __name__ == "__main__":
-    conn, cursor = create_database_connection()
+    # conn, cursor = create_database_connection()
 
-    create_tables()
-    insert_tags()
-    insert_org_groups()
+    # create_tables()
+    # insert_tags()
+    # insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    communication_data = get_communications(campaign_data)
-    communication_data = fix_communications(communication_data)
-    insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
+    # communication_data = get_communications(campaign_data)
+    # communication_data = fix_communications(communication_data)
+    # insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    insert_org_group_history()
-    insert_tag_history()
+    # insert_org_group_history()
+    # insert_tag_history()
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+    # conn.commit()
+    # cursor.close()
+    # conn.close()
