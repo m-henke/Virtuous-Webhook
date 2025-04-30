@@ -34,11 +34,20 @@ async function tag_update(tags, contactID, pool) {
 
     // Add new tags
     for (let tag of newTags) {
-        if (!existingTags.has(tag)) {
-            await tag_create(tag, contactID, pool);
+        try {
+            if (!existingTags.has(tag)) {
+                await tag_create(tag, contactID, pool);
+            }
+        } catch {
+            // this is here because if a tag name changes in virtuous
+            // that change doesn't get sent to the server and it will 
+            // crash the process this is here so when that happens it
+            // will still go and do the rest of the tags
+            // it would be beneficial to figure out a way to check this tag
+            // in virtuous and possibly update it in the database
         }
     }
-
+    
     // Remove old tags from database
     for (let resp of response) {
         if (!newTags.has(resp.TagName)) {
@@ -60,11 +69,20 @@ async function org_group_update(org_groups, contactID, pool) {
 
     // Add new org groups
     for (let org of newOrgGroups) {
-        if (!existingOrgGroups.has(org)) {
-            await org_group_create(org, contactID, pool);
+        try {
+            if (!existingOrgGroups.has(org)) {
+                await org_group_create(org, contactID, pool);
+            }
+        } catch {
+            // this is here because if a org group name changes in virtuous
+            // that change doesn't get sent to the server and it will 
+            // crash the process this is here so when that happens it
+            // will still go and do the rest of the org groups
+            // it would be beneficial to figure out a way to check this group
+            // in virtuous and possibly update it in the database
         }
     }
-
+    
     // Remove old org groups
     for (let resp of response) {
         if (!newOrgGroups.has(resp.OrgGroupName)) {
