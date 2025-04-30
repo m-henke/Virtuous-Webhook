@@ -2,8 +2,11 @@ const { query_async } = require('./contact_create');
 const { format_date } = require('./gift_create')
 
 async function update_contact_last_gift(gift, pool) {
+    const contactID_query = "SELECT ContactID FROM gifts WHERE GiftID = ?;";
+    const contactId = await query_async(pool, contactID_query, [gift.id])
+
     const select_query = "SELECT LastGiftAmount, LastGiftDate FROM contacts WHERE ContactID = ?;";
-    const last_gift_info = await query_async(pool, select_query, [gift.contactId]);
+    const last_gift_info = await query_async(pool, select_query, [contactId]);
 
     if (last_gift_info.length == 0) {
         return;
@@ -11,14 +14,14 @@ async function update_contact_last_gift(gift, pool) {
 
     if (Number(gift.amount) == Number(last_gift_info[0].LastGiftAmount) && new Date(format_date(gift.giftDateFormatted)).toISOString().split('T')[0] == new Date(last_gift_info[0].LastGiftDate).toISOString().split('T')[0]) {
         const select_prev_gift_query = "SELECT Amount, GiftDate FROM gifts WHERE ContactID = ? ORDER BY GiftDate DESC;";
-        const old_gifts = await query_async(pool, select_prev_gift_query, [gift.contactId]);
+        const old_gifts = await query_async(pool, select_prev_gift_query, [contactId]);
 
         if (old_gifts.length == 0) {
             return;
         }
 
         const update_contact_query = "UPDATE contacts SET LastGiftAmount = ?, LastGiftDate = ? WHERE ContactID = ?;";
-        await query_async(pool, update_contact_query, [old_gifts[0].Amount, old_gifts[0].GiftDate, gift.contactId]);
+        await query_async(pool, update_contact_query, [old_gifts[0].Amount, old_gifts[0].GiftDate, contactId]);
     }
 }
 
