@@ -8,9 +8,9 @@ function format_date(date) {
 }
 
 async function handle_bad_project_codes(gift) {
-    const bad_codes = ["2263", "2300", "2305", "4002", "2281"];
+    const good_codes = ["4000", "1101", "1102", "1103"];
     for (let i = 0; i < gift.giftDesignations.length; i++) {
-        if (bad_codes.includes(gift.giftDesignations[i].projectCode)) {
+        if (!good_codes.includes(gift.giftDesignations[i].projectCode)) {
             gift.amount -= gift.giftDesignations[i].amountDesignated;
         }
     }

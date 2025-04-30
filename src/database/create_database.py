@@ -190,7 +190,7 @@ def read_virtuous_exports():
     used_gift_id = {}
     new_gift_data = []
     for gift in gift_data:
-        if gift[9] in ("2263", "2300", "2305", "4002", "2281") or used_gift_id.get(gift[0], False):
+        if gift[9] not in ("4000", "1101", "1102", "1103") or used_gift_id.get(gift[0], False):
             continue
         if bad_gift_id.get(gift[0], False):
             gift[1] = Decimal(gift[-1])
