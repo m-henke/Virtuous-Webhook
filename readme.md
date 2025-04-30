@@ -58,6 +58,7 @@ This project maintains a local MySQL database by automatically updating it using
     - then comment everything except for the code that reads the json file and returns it
     - It also contains code that can do all of this in one query however Virtuous API is broken so it won't work
         - if it works in the future it might be worth updating this
+- If an org group or tag name is updated in Virtuous that name change will not translate and it will cause an error
 
 ## Author
 #### Michael Henke
