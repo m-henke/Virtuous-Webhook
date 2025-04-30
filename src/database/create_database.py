@@ -186,11 +186,11 @@ def read_virtuous_exports():
         [int(line[4])] + 
         [None if line[5] == '' else int(line[5])] +
         line[6:] for line in gift_data]
-    bad_gift_id = {line[0]: True for line in gift_data if line[9] not in ("4000", "1101", "1102", "1103")}
+    bad_gift_id = {line[0]: True for line in gift_data if line[9] not in ("4000", "1101", "1102", "1103", "1104")}
     used_gift_id = {}
     new_gift_data = []
     for gift in gift_data:
-        if gift[9] not in ("4000", "1101", "1102", "1103") or used_gift_id.get(gift[0], False):
+        if gift[9] not in ("4000", "1101", "1102", "1103", "1104") or used_gift_id.get(gift[0], False):
             continue
         if bad_gift_id.get(gift[0], False):
             gift[1] = Decimal(gift[-1])
