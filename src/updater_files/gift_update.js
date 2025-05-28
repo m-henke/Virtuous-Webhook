@@ -10,7 +10,7 @@ async function gift_update(gift, pool) {
     if (gift.giftType == "Electronic Funds Transfer") {
         gift.giftType = "EFT";
     }
-    if (response[0].SegmentCode == gift.segmentCode) {
+    if (response[0].segmentCode == gift.segmentCode) {
         gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ? WHERE GiftID = ?;";
         values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.id];
     } else {
