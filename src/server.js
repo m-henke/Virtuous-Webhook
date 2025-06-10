@@ -10,7 +10,7 @@ const server = express();
 const port = 80;
 
 // Setup middleware
-server.use(express.json());
+server.use(express.json({limit: '5mb'}));
 
 // Create mysql connection pool
 const pool = mysql.createPool({
