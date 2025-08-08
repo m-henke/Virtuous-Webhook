@@ -169,7 +169,7 @@ def read_virtuous_exports():
     print("Campaign data imported")
 
     # Fix All Gifts file
-    gift_export_fn = "All Gifts (1).csv"
+    gift_export_fn = "All Gifts.csv"
     with open(f"src/database/virtuous_exports/{gift_export_fn}", 'r', encoding='utf-8-sig') as f:
         data = [line.strip('\n') for line in f.readlines()]
     for i, line in enumerate(data):
@@ -218,7 +218,7 @@ def read_virtuous_exports():
     print("Individual data imported")
 
     # Import contact data
-    contact_data = get_csv_file("All Contacts (1).csv")
+    contact_data = get_csv_file("All Contacts.csv")
     contact_data = [
         [int(line[0])] + 
         [line[1]] +
@@ -403,21 +403,21 @@ if __name__ == "__main__":
     conn, cursor = create_database_connection()
 
     keep_history_tables = True
-    # create_tables(keep_history_tables)
-    # insert_tags()
-    # insert_org_groups()
+    create_tables(keep_history_tables)
+    insert_tags()
+    insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    # communication_data = get_communications(campaign_data)
-    # communication_data = fix_communications(communication_data)
+    communication_data = get_communications(campaign_data)
+    communication_data = fix_communications(communication_data)
     communication_data = []
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    # if not keep_history_tables:
-    #     insert_org_group_history()
-    #     insert_tag_history()
+    if not keep_history_tables:
+        insert_org_group_history()
+        insert_tag_history()
 
-    # conn.commit()
+    conn.commit()
     cursor.close()
     conn.close()
