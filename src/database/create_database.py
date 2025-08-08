@@ -8,6 +8,7 @@ ORG_GROUP_ENDPOINT = "https://api.virtuoussoftware.com/api/OrganizationGroup?tak
 HEADERS = {
     'Authorization': f'Bearer {os.getenv("VIRTUOUS_TOKN")}'
 }
+GOOD_PROJECT_CODES = ("4000", "1101", "1102", "1103", "1104")
 
 def create_database_connection():
     conn = mysql.connector.connect(
@@ -113,8 +114,7 @@ def insert_org_groups():
 
 # Reads and formats the Virtuous exports and returns the data
 def read_virtuous_exports():
-    # Helper function for read_virtuous_exports 
-    def get_csv_file(filename):
+    def get_csv_file(filename, for_gifts: bool = False):
         print("Reading:", filename)
         try:
             with open(f"virtuous_exports/{filename}", 'r', encoding='utf-8') as f:
@@ -124,11 +124,13 @@ def read_virtuous_exports():
             with open(f"src/database/virtuous_exports/{filename}", 'r', encoding='utf-8') as f:
                 f.readline()
                 return_data = f.readlines()
-        return_data = [line.strip().split('","') for line in return_data]
+        if for_gifts:
+            return_data = [line.strip().split(',') for line in return_data]
+        else:
+            return_data = [line.strip().split('","') for line in return_data]
         return_data = [[col.strip('"') for col in row] for row in return_data]
         return return_data
 
-    # Helper function for read_virtuous_exports
     def format_phone_number(individual):
         phone_number = individual[4]
         # Too short to be a full number
@@ -152,7 +154,6 @@ def read_virtuous_exports():
             return None
         return phone_number
     
-    # Helper function for read_virtuous_exports
     def format_date(date):
         return None if date == "" else datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
 
@@ -168,16 +169,17 @@ def read_virtuous_exports():
     print("Campaign data imported")
 
     # Fix All Gifts file
-    with open("src/database/virtuous_exports/All Gifts.csv", 'r') as f:
+    gift_export_fn = "All Gifts (1).csv"
+    with open(f"src/database/virtuous_exports/{gift_export_fn}", 'r', encoding='utf-8-sig') as f:
         data = [line.strip('\n') for line in f.readlines()]
     for i, line in enumerate(data):
         if line[-1] == ',' and i > 0:
             data[i] += '""'
-    with open("src/database/virtuous_exports/All Gifts.csv", 'w') as f:
+    with open(f"src/database/virtuous_exports/{gift_export_fn}", 'w', encoding='utf-8-sig') as f:
         f.write('\n'.join(data))
     
     # Import gift data
-    gift_data = get_csv_file("All Gifts.csv")
+    gift_data = get_csv_file(gift_export_fn, True)
     gift_data = [
         [int(line[0])] + 
         [Decimal(line[1])] + 
@@ -186,17 +188,23 @@ def read_virtuous_exports():
         [int(line[4])] + 
         [None if line[5] == '' else int(line[5])] +
         line[6:] for line in gift_data]
-    bad_gift_id = {line[0]: True for line in gift_data if line[9] not in ("4000", "1101", "1102", "1103", "1104")}
+    bad_gift_id = {line[0]: True for line in gift_data if line[9] not in GOOD_PROJECT_CODES}
     used_gift_id = {}
     new_gift_data = []
     for gift in gift_data:
-        if gift[9] not in ("4000", "1101", "1102", "1103", "1104") or used_gift_id.get(gift[0], False):
+        """
+        These if statements and the bad_gift_id dict look redundent, but
+        there can be multiple entries for the same gift id if it is designated
+        to multiple project codes. This will skip the entry with the bad code and then 
+        for the entry with the good code if it exists it gets the designated amount
+        """
+        if gift[9] not in GOOD_PROJECT_CODES or used_gift_id.get(gift[0], False):
             continue
         if bad_gift_id.get(gift[0], False):
             gift[1] = Decimal(gift[-1])
         if gift[10] != "":
             gift[4] = int(gift[10])
-        new_gift_data.append(gift[:9] + [gift[11]] + [gift[12]])
+        new_gift_data.append(gift[:9] + [gift[11]] + [gift[12]] + [gift[13]])
         used_gift_id[gift[0]] = True
     print("Gift data imported")
     
@@ -210,7 +218,7 @@ def read_virtuous_exports():
     print("Individual data imported")
 
     # Import contact data
-    contact_data = get_csv_file("All Contacts.csv")
+    contact_data = get_csv_file("All Contacts (1).csv")
     contact_data = [
         [int(line[0])] + 
         [line[1]] +
@@ -218,7 +226,9 @@ def read_virtuous_exports():
         [Decimal(line[3])] +
         [format_date(line[4])] +
         [line[5].split(';')] +
-        [line[6].split(';')] for line in contact_data]
+        [line[6].split(';')] +
+        [line[7]] +
+        [line[8]] for line in contact_data]
     print("Contact data imported")
     
     return segment_data, campaign_data, new_gift_data, individual_data, contact_data
@@ -309,8 +319,8 @@ def fix_communications(communication_data):
 # Inserts the data into the database
 def insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data):
     insert_contacts_query = """
-    INSERT INTO contacts (ContactID, ContactName, ContactType, LastGiftAmount, LastGiftDate) 
-    VALUES (%s, %s, %s, %s, %s);
+    INSERT INTO contacts (ContactID, ContactName, ContactType, LastGiftAmount, LastGiftDate, AddressState, AddressZIP) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
     insert_individuals_query = """
     INSERT INTO individuals (IndividualID, ContactID, FirstName, LastName, PhoneNumber, Email) 
@@ -329,8 +339,8 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
     VALUES (%s, %s, %s, %s);
     """
     insert_gifts_query = """
-    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus, UTMCampaign) 
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    INSERT IGNORE INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus, UTMCampaign, Note) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
     insert_contact_tag_query = """
     INSERT IGNORE INTO contact_tags (ContactID, TagID)
@@ -341,7 +351,7 @@ def insert_data(segment_data, campaign_data, gift_data, individual_data, contact
 
     tags = [line[6] for line in contact_data]
     org_groups = [line[5] for line in contact_data]
-    contact_data = [line[:5] for line in contact_data]
+    contact_data = [line[:5] + [line[7]] + [line[8]] for line in contact_data]
     cursor.execute("SELECT * FROM tags;")
     tag_dict = {line[1]: line[0] for line in cursor.fetchall()}
     cursor.execute("SELECT * FROM org_groups;")
@@ -393,20 +403,21 @@ if __name__ == "__main__":
     conn, cursor = create_database_connection()
 
     keep_history_tables = True
-    create_tables(keep_history_tables)
-    insert_tags()
-    insert_org_groups()
+    # create_tables(keep_history_tables)
+    # insert_tags()
+    # insert_org_groups()
     
     segment_data, campaign_data, gift_data, individual_data, contact_data = read_virtuous_exports()
     segment_data = fix_segments(segment_data, campaign_data, gift_data)
-    communication_data = get_communications(campaign_data)
-    communication_data = fix_communications(communication_data)
+    # communication_data = get_communications(campaign_data)
+    # communication_data = fix_communications(communication_data)
+    communication_data = []
     insert_data(segment_data, campaign_data, gift_data, individual_data, contact_data, communication_data)
     
-    if not keep_history_tables:
-        insert_org_group_history()
-        insert_tag_history()
+    # if not keep_history_tables:
+    #     insert_org_group_history()
+    #     insert_tag_history()
 
-    conn.commit()
+    # conn.commit()
     cursor.close()
     conn.close()

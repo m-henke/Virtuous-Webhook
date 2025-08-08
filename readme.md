@@ -46,10 +46,10 @@ This project maintains a local MySQL database by automatically updating it using
 3) Start server `npm start`
 
 ## Notes
+- Before creating database open the all gifts.csv in excel press do not convert when prompted in a new column paste this foruma and fill for all rows =TRIM(CLEAN(SUBSTITUTE(N2,CHAR(10)," "))) copy only the values of that column to a new column then delete the other two columns insert a new column where the old use to be and paste the values in then find and replace all " and , in that column with nothing
 - [Datebase Schema](https://dbdiagram.io/d/Local-Virtuous-Database-67bde7df263d6cf9a06b7d20)
 - Campaign ID == 0 means that it is an archived campaign
 - When creating the database in the fix segment function if there is a segment that doesn't match to a gift in the last 5 years it is skipped and not added to the local database 
-- It will take atleast an hour to run the create_database script
 - After creating the database it is worth checking to make sure no webhooks were sent during that time
 -The get communication function contains commented code
     - some of it is there for testing purposes as running the function take about 600 api calls
@@ -60,6 +60,13 @@ This project maintains a local MySQL database by automatically updating it using
         - if it works in the future it might be worth updating this
 - If an org group or tag name is updated in Virtuous that name change will not translate and it will cause an error
     - It is set to just skip the error and keep going when this happens there won't be a notification that gets sent for it
+
+## Adding a new field to the database
+- Add new field to the Virtuous query download 
+- Compare new file to old Virtuous export to see what index changed for the fields
+- Update read_virtuous_exports, the related fix function if it exists, and then the query in the insert data function 
+- Check that the new indexes don't affect the other fix functions some of them are based on eachothers information 
+- Don't forget to update the schema and any of the updater/server files that need to be updated to get the new field from a request
 
 ## Author
 #### Michael Henke

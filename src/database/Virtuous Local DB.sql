@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS contacts (
   ContactName VARCHAR(255) NOT NULL,
   ContactType VARCHAR(25) NOT NULL,
   LastGiftAmount DECIMAL(10, 2),
-  LastGiftDate DATE
+  LastGiftDate DATE,
+  AddressState VARCHAR(50),
+  AddressZIP VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS individuals (
@@ -50,6 +52,7 @@ CREATE TABLE IF NOT EXISTS gifts (
   CommunicationName VARCHAR(100),
   ReceiptStatus VARCHAR(25),
   UTMCampaign TEXT,
+  Note TEXT,
   FOREIGN KEY (ContactID) REFERENCES contacts (ContactID),
   FOREIGN KEY (IndividualID) REFERENCES individuals (IndividualID),
   FOREIGN KEY (SegmentCode) REFERENCES segments (SegmentCode)
