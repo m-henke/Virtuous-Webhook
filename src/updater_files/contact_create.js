@@ -43,9 +43,15 @@ function query_async(pool, query, params) {
 
 // Insert new contact
 async function contact_create(contact, pool) {
-    const query = "INSERT INTO contacts (ContactID, ContactName, ContactType, LastGiftAmount, LastGiftDate) VALUES (?, ?, ?, ?, ?);";
+    const query = "INSERT INTO contacts (ContactID, ContactName, ContactType, LastGiftAmount, LastGiftDate, AddressState, AddressZIP) VALUES (?, ?, ?, ?, ?);";
     contact.contactType = contact.customContactType || contact.contactType;
-    const values = [contact.id, contact.name, contact.contactType, null, null];
+    let state = null;
+    let postal = null;
+    if (contact.contactAddresses.length() > 0) {
+        state = contact.contactAddresses[0].state;
+        postal = contact.contactAddresses[0].postal;
+    }
+    const values = [contact.id, contact.name, contact.contactType, null, null, state, postal];
     await query_async(pool, query, values);
 }
 

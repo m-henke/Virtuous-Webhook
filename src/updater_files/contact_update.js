@@ -1,9 +1,24 @@
 const { tag_create, org_group_create, get_todays_date, format_phone_number, query_async } = require('./contact_create')
 
 async function contact_update(contact, pool) {
-    const query = "UPDATE contacts SET ContactName = ?, ContactType = ? WHERE ContactID = ?;";
+    let state = null;
+    let postal = null;
+
+    if (contact.contactAddresses.length() > 0) {
+        state = contact.contactAddresses[0].state;
+        postal = contact.contactAddresses[0].postal;
+    }
+
+    let query = query = "UPDATE contacts SET ContactName = ?, ContactType = ? WHERE ContactID = ?;";
     contact.contactType = contact.customContactType || contact.contactType;
-    await query_async(pool, query, [contact.name, contact.contactType, contact.id]);
+    let values = [contact.name, contact.contactType, contact.id];
+
+    if (state != null && postal != null) {
+        query = "UPDATE contacts SET ContactName = ?, ContactType = ?, AddressState = ?, AddressZIP = ? WHERE ContactID = ?;";
+        values = [contact.name, contact.contactType, state, postal, contact.id]
+    }
+
+    await query_async(pool, query, values);
 }
 
 async function individual_update(individual, pool) {
