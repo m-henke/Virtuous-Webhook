@@ -47,7 +47,7 @@ async function contact_create(contact, pool) {
     contact.contactType = contact.customContactType || contact.contactType;
     let state = null;
     let postal = null;
-    if (contact.contactAddresses.length() > 0) {
+    if (contact.contactAddresses.length > 0) {
         state = contact.contactAddresses[0].state;
         postal = contact.contactAddresses[0].postal;
     }

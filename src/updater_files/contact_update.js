@@ -4,7 +4,7 @@ async function contact_update(contact, pool) {
     let state = null;
     let postal = null;
 
-    if (contact.contactAddresses.length() > 0) {
+    if (contact.contactAddresses.length > 0) {
         state = contact.contactAddresses[0].state;
         postal = contact.contactAddresses[0].postal;
     }
