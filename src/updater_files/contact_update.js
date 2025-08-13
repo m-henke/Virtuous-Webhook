@@ -4,12 +4,12 @@ async function contact_update(contact, pool) {
     let state = null;
     let postal = null;
 
-    if (contact.contactAddresses.length > 0) {
+    if (contact && Array.isArray(contact.contactAddresses) && contact.contactAddresses.length > 0) {
         state = contact.contactAddresses[0].state;
         postal = contact.contactAddresses[0].postal;
     }
 
-    let query = query = "UPDATE contacts SET ContactName = ?, ContactType = ? WHERE ContactID = ?;";
+    let query = "UPDATE contacts SET ContactName = ?, ContactType = ? WHERE ContactID = ?;";
     contact.contactType = contact.customContactType || contact.contactType;
     let values = [contact.name, contact.contactType, contact.id];
 
