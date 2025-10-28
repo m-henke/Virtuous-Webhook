@@ -11,16 +11,16 @@ async function gift_update(gift, pool) {
         gift.giftType = "EFT";
     }
     if (response[0].segmentCode == gift.segmentCode) {
-        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, Note = ? WHERE GiftID = ?;";
-        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.notes, gift.id];
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, Note = ?, ContactID = ? WHERE GiftID = ?;";
+        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.notes, gift.contactId, gift.id];
     } else {
-        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, SegmentCode = ?, CommunicationName = ?, Note = ? WHERE GiftID = ?;";
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, SegmentCode = ?, CommunicationName = ?, Note = ?, ContactID = ? WHERE GiftID = ?;";
         const seg_response = await axios.get(`https://api.virtuoussoftware.com/api/Segment/Code/${gift.segmentCode}`, 
             {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
         if (seg_response.status != 200) {
             throw new Error(seg_response.statusText);
         }
-        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.segmentCode, seg_response.data.communicationName, gift.notes, gift.id];
+        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.segmentCode, seg_response.data.communicationName, gift.notes, gift.contactId, gift.id];
     }
     await query_async(pool, gift_query, values);
 }
