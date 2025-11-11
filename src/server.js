@@ -31,6 +31,7 @@ server.post("/receive-webhook", async (req, res) => {
     } catch {
         console.log(`Webhook Received: ${data.event}`);
     }
+    res.status(200).send("Received");
     let errors = [];
     try {
         switch (data.event) {
@@ -106,13 +107,10 @@ server.post("/receive-webhook", async (req, res) => {
             for (let error of errors) {
                 notify_teams(error, data.event);
             }
-            res.status(500).send("failure");
             return;
         }
-        res.status(200).send("success");
     } catch (err) {
         notify_teams(err, data.event);
-        res.status(500).send("failure");
     }
 });
 
