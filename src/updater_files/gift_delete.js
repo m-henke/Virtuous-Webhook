@@ -3,7 +3,13 @@ const { format_date } = require('./gift_create')
 
 async function update_contact_last_gift(gift, pool) {
     const contactID_query = "SELECT ContactID FROM gifts WHERE GiftID = ?;";
-    const contactId = await query_async(pool, contactID_query, [gift.id])
+    const id_response = await query_async(pool, contactID_query, [gift.id]);
+    
+    if (id_response.length == 0) {
+        return;
+    }
+
+    const contactId = id_response[0].ContactID;
 
     const select_query = "SELECT LastGiftAmount, LastGiftDate FROM contacts WHERE ContactID = ?;";
     const last_gift_info = await query_async(pool, select_query, [contactId]);
