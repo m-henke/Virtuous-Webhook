@@ -163,5 +163,6 @@ module.exports = {
     get_todays_date,
     query_async,
     format_phone_number,
-    run_contact_create
+    run_contact_create,
+    individual_create
 }
