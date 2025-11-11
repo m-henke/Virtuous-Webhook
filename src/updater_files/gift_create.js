@@ -1,4 +1,4 @@
-const { query_async } = require('./contact_create');
+const { query_async, individual_create } = require('./contact_create');
 const axios = require("axios");
 
 // Helper function to take virtuous formatted date and make it usable for mysql
@@ -28,6 +28,14 @@ async function gift_create(gift, pool) {
 
     if (seg_response.status != 200) {
         throw new Error(seg_response.statusText);
+    }
+
+    const individual_query = "SELECT * FROM individuals WHERE IndividualID = ?;"
+    const individual_response = await query_async(pool, individual_query, [gift.contactIndividualId]);
+    if (individual_response.length == 0) {
+        const individual_req_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/${gift.contactIndividualId}`, 
+            {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
+        await individual_create(individual_req_response, gift.contactId, pool);
     }
 
     const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode, seg_response.data.communicationName, gift.customFields["Receipt Status"], gift.notes];
