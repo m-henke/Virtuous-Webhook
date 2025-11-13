@@ -30,12 +30,23 @@ async function gift_create(gift, pool) {
         throw new Error(seg_response.statusText);
     }
 
-    const individual_query = "SELECT * FROM individuals WHERE IndividualID = ?;"
-    const individual_response = await query_async(pool, individual_query, [gift.contactIndividualId]);
-    if (individual_response.length == 0) {
-        const individual_req_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/${gift.contactIndividualId}`, 
+    if (gift.contactIndividualId) {
+        const individual_query = "SELECT * FROM individuals WHERE IndividualID = ?;"
+        const individual_response = await query_async(pool, individual_query, [gift.contactIndividualId]);
+        if (individual_response.length == 0) {
+            const individual_req_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/${gift.contactIndividualId}`, 
+                {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
+            await individual_create(individual_req_response, gift.contactId, pool);
+        }
+    } else {
+        const individual_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/ByContact/${gift.contactId}`, 
             {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
-        await individual_create(individual_req_response, gift.contactId, pool);
+        for (let ind of individual_response) {
+            if (ind.isPrimary) {
+                await individual_create(ind, gift.contactId, pool);
+                break;
+            }
+        }
     }
 
     const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode, seg_response.data.communicationName, gift.customFields["Receipt Status"], gift.notes];
