@@ -66,11 +66,13 @@ async function individual_create(individual, contactID, pool) {
     var email = null;
     var phone = null;
 
-    for (let method of individual.contactMethods) {
-        if (method.type.toLowerCase().includes("email") && method.isPrimary) {
-            email = method.value;
-        } else if (method.type.toLowerCase().includes("phone") && method.isPrimary) {
-            phone = format_phone_number(method.value);
+    if (individual.contactMethods != null && typeof individual.contactMethods[Symbol.iterator] === 'function') {
+        for (let method of individual.contactMethods) {
+            if (method.type.toLowerCase().includes("email") && method.isPrimary) {
+                email = method.value;
+            } else if (method.type.toLowerCase().includes("phone") && method.isPrimary) {
+                phone = format_phone_number(method.value);
+            }
         }
     }
 
