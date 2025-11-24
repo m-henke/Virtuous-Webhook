@@ -84,7 +84,7 @@ server.post("/receive-webhook", async (req, res) => {
                         }
                     }
                 } catch {
-                    run_gift_update(data, pool);
+                    await run_gift_update(data, pool);
                 }
                 break;
             case "GiftDelete":
