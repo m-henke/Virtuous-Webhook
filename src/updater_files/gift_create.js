@@ -36,12 +36,12 @@ async function gift_create(gift, pool) {
         if (individual_response.length == 0) {
             const individual_req_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/${gift.contactIndividualId}`, 
                 {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
-            await individual_create(individual_req_response, gift.contactId, pool);
+            await individual_create(individual_req_response.data, gift.contactId, pool);
         }
     } else {
         const individual_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/ByContact/${gift.contactId}`, 
             {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
-        for (let ind of individual_response) {
+        for (let ind of individual_response.data) {
             if (ind.isPrimary) {
                 await individual_create(ind, gift.contactId, pool);
                 break;
