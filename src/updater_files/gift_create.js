@@ -17,6 +17,12 @@ async function handle_bad_project_codes(gift) {
     return gift;
 }
 
+async function individual_exists(individualId, pool) {
+    const individual_query = "SELECT * FROM individuals WHERE IndividualID = ?;"
+    const individual_response = await query_async(pool, individual_query, [individualId]);
+    return individual_response.length > 0;
+}
+
 async function gift_create(gift, pool) {
     const gift_query = "INSERT INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus, Note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     if (gift.giftType == "Electronic Funds Transfer") {
@@ -31,9 +37,8 @@ async function gift_create(gift, pool) {
     }
 
     if (gift.contactIndividualId) {
-        const individual_query = "SELECT * FROM individuals WHERE IndividualID = ?;"
-        const individual_response = await query_async(pool, individual_query, [gift.contactIndividualId]);
-        if (individual_response.length == 0) {
+        const exists = await individual_exists(gift.contactIndividualId, pool);
+        if (!exists) {
             const individual_req_response = await axios.get(`https://api.virtuoussoftware.com/api/ContactIndividual/${gift.contactIndividualId}`, 
                 {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
             await individual_create(individual_req_response.data, gift.contactId, pool);
@@ -43,7 +48,10 @@ async function gift_create(gift, pool) {
             {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
         for (let ind of individual_response.data) {
             if (ind.isPrimary) {
-                await individual_create(ind, gift.contactId, pool);
+                const exists = await individual_exists(ind.id, pool);
+                if (!exists) {
+                    await individual_create(ind, gift.contactId, pool);
+                }
                 break;
             }
         }
