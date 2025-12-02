@@ -24,7 +24,7 @@ async function individual_exists(individualId, pool) {
 }
 
 async function gift_create(gift, pool) {
-    const gift_query = "INSERT INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus, Note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    const gift_query = "INSERT INTO gifts (GiftID, Amount, GiftType, GiftDate, ContactID, IndividualID, SegmentCode, CommunicationName, ReceiptStatus, UTMCampaign, Note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     if (gift.giftType == "Electronic Funds Transfer") {
         gift.giftType = "EFT";
     }
@@ -57,7 +57,7 @@ async function gift_create(gift, pool) {
         }
     }
 
-    const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode, seg_response.data.communicationName, gift.customFields["Receipt Status"], gift.notes];
+    const values = [gift.id, gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.contactId, gift.contactIndividualId, gift.segmentCode, seg_response.data.communicationName, gift.customFields["Receipt Status"], gift.customFields["UTM Campaign"], gift.notes];
     await query_async(pool, gift_query, values);
 }
 

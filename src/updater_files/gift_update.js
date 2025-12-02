@@ -1,4 +1,4 @@
-const { format_date, create_new_segment, handle_bad_project_codes } = require('./gift_create');
+const { format_date, create_new_segment, handle_bad_project_codes, run_gift_create } = require('./gift_create');
 const { update_contact_last_gift } = require('./gift_delete');
 const { query_async } = require('./contact_create');
 const axios = require('axios');
@@ -10,17 +10,20 @@ async function gift_update(gift, pool) {
     if (gift.giftType == "Electronic Funds Transfer") {
         gift.giftType = "EFT";
     }
+    if (response.length == 0) {
+        return await run_gift_create({"gift": gift}, pool);
+    }
     if (response[0].segmentCode == gift.segmentCode) {
-        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, Note = ?, ContactID = ? WHERE GiftID = ?;";
-        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.notes, gift.contactId, gift.id];
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, Note = ?, ContactID = ?, UTMCampaign = ? WHERE GiftID = ?;";
+        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.notes, gift.contactId, gift.customFields["UTM Campaign"], gift.id];
     } else {
-        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, SegmentCode = ?, CommunicationName = ?, Note = ?, ContactID = ? WHERE GiftID = ?;";
+        gift_query = "UPDATE gifts SET Amount = ?, GiftType = ?, GiftDate = ?, ReceiptStatus = ?, SegmentCode = ?, CommunicationName = ?, Note = ?, ContactID = ?, UTMCampaign = ? WHERE GiftID = ?;";
         const seg_response = await axios.get(`https://api.virtuoussoftware.com/api/Segment/Code/${gift.segmentCode}`, 
             {headers: {'Authorization': `Bearer ${process.env.VIRTUOUS_TOKN}`}});
         if (seg_response.status != 200) {
             throw new Error(seg_response.statusText);
         }
-        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.segmentCode, seg_response.data.communicationName, gift.notes, gift.contactId, gift.id];
+        values = [gift.amount, gift.giftType, format_date(gift.giftDateFormatted), gift.customFields["Receipt Status"], gift.segmentCode, seg_response.data.communicationName, gift.notes, gift.contactId, gift.customFields["UTM Campaign"], gift.id];
     }
     await query_async(pool, gift_query, values);
 }
